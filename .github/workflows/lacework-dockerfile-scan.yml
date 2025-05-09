@@ -35,8 +35,4 @@ jobs:
         run: |
           lw-scanner dockerfile evaluate ./Dockerfile --save | tee scan-results.txt
 
-      - name: Upload scan results
-        uses: actions/upload-artifact@v3
-        with:
-          name: lacework-scan-results
-          path: scan-results.txt
+
