@@ -17,7 +17,7 @@ jobs:
       - name: Install Lacework CLI
         run: |
           curl https://raw.githubusercontent.com/lacework/go-sdk/main/cli/install.sh | bash
-          sudo mv lacework /usr/local/bin/
+    
 
       - name: Configure Lacework CLI
         env:
