@@ -24,10 +24,6 @@ jobs:
         run: |
           curl https://raw.githubusercontent.com/lacework/go-sdk/main/cli/install.sh | bash
 
-      - name: Configure Lacework CLI
-        run: |
-          lacework configure --account $LW_ACCOUNT --token $LW_API_TOKEN --noninteractive
-
       - name: Dockerfile IaC scan
         run: |
           lacework code scan --dockerfile ./Dockerfile --upload
