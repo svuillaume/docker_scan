@@ -1,41 +1,27 @@
-name: Lacework Dockerfile Scan
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
-permissions:
-  contents: read
-
 jobs:
-  dockerfile-scan:
+  scan:
     runs-on: ubuntu-latest
+    env:
+      LW_ACCOUNT: ${{ secrets.LW_ACCOUNT }}
+      LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN }}
 
     steps:
-      - name: Checkout source code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Install Lacework Inline Scanner
+      - name: Install lw-scanner
         run: |
-          curl -fL https://github.com/lacework/lacework-vulnerability-scanner/releases/latest/download/lw-scanner-linux-amd64 -o lw-scanner
-          chmod +x lw-scanner
-          sudo mv lw-scanner /usr/local/bin/lw-scanner
+          curl -sL https://github.com/lacework/lw-scanner/releases/latest/download/lw-scanner-linux-amd64 \
+            -o /usr/local/bin/lw-scanner
+          chmod +x /usr/local/bin/lw-scanner
 
-      - name: Configure Lacework authentication
+      - name: Configure auth non-interactively
         run: |
-          lw-scanner config auth \
-            --account "$LW_ACCOUNT" \
-            --api_key "$LW_API_KEY" \
-            --api_secret "$LW_API_SECRET"
-        env:
-          LW_ACCOUNT: ${{ secrets.LW_ACCOUNT }}
-          LW_API_KEY: ${{ secrets.LW_API_KEY }}
-          LW_API_SECRET: ${{ secrets.LW_API_SECRET }}
+          mkdir -p ~/.lacework
+          cat <<EOF > ~/.lacework.toml
+[default]
+account = "${LW_ACCOUNT}"
+access_token = "${LW_ACCESS_TOKEN}"
+EOF
 
-      - name: Run Dockerfile scan
-        run: |
-          lw-scanner dockerfile evaluate --dockerfile ./Dockerfile --save | tee results.json
-
-
+      - name: Scan Dockerfile
+        run: lw-scanner dockerfile evaluate ./Dockerfile --save
