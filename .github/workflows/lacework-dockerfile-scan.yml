@@ -1,4 +1,4 @@
-name: Lacework Local Image Scan
+name: Lacework Container Image Scan
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  scan:
+  image-scan:
     runs-on: ubuntu-latest
     env:
       LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME }}
@@ -27,10 +27,6 @@ jobs:
           chmod +x lw-scanner
           sudo mv lw-scanner /usr/local/bin/lw-scanner
 
-      - name: Authenticate Lacework Scanner
-        run: |
-          lw-scanner config auth --account $LW_ACCOUNT_NAME --token $LW_ACCESS_TOKEN
-
-      - name: Scan Docker image
+      - name: Scan Docker image for vulnerabilities
         run: |
           lw-scanner image evaluate myapp:latest --save
