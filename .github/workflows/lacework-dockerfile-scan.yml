@@ -1,4 +1,4 @@
-name: Lacework Inline Scanner (Local Image)
+name: Lacework Inline Scanner (Dockerfile)
 
 on:
   push:
@@ -9,16 +9,10 @@ on:
 jobs:
   scan:
     runs-on: ubuntu-latest
-    env:
-      IMAGE_NAME: myapp
-      IMAGE_TAG: ${{ github.sha }}
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@v3
-
-      - name: Build Docker image
-        run: docker build -t $IMAGE_NAME:$IMAGE_TAG .
+        uses: actions/checkout@v3.6.0
 
       - name: Install Lacework Inline Scanner
         run: |
@@ -37,15 +31,12 @@ jobs:
           LW_API_KEY: ${{ secrets.LW_API_KEY }}
           LW_API_SECRET: ${{ secrets.LW_API_SECRET }}
 
-      - name: Evaluate image
+      - name: Scan Dockerfile
         run: |
-          lw-scanner image evaluate $IMAGE_NAME:$IMAGE_TAG --save | tee results.json
-        env:
-          IMAGE_NAME: myapp
-          IMAGE_TAG: ${{ github.sha }}
+          lw-scanner dockerfile evaluate --dockerfile ./Dockerfile --save | tee results.json
 
       - name: Upload scan result artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v3.1.3
         with:
           name: lw-scan-results
           path: results.json
@@ -53,7 +44,7 @@ jobs:
       - name: Prepare PR summary
         if: github.event_name == 'pull_request'
         run: |
-          echo "## Lacework Inline Scanner Summary" > pr-results.md
+          echo "## Lacework Dockerfile Scan Summary" > pr-results.md
           echo "" >> pr-results.md
           jq -r '
             .summary | 
@@ -67,7 +58,6 @@ jobs:
 
       - name: Comment PR
         if: github.event_name == 'pull_request'
-        uses: thollander/actions-comment-pull-request@v2
+        uses: thollander/actions-comment-pull-request@v2.4.2
         with:
           filePath: pr-results.md
-
