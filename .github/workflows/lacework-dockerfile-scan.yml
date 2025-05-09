@@ -44,7 +44,7 @@ jobs:
       #     lw-scanner image evaluate myapp:latest --save | tee results.json
 
       - name: Upload scan result artifact
-        uses: actions/upload-artifact@v3.1.3
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: lw-scan-results
           path: results.json
