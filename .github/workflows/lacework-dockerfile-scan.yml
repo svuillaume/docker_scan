@@ -29,4 +29,4 @@ jobs:
 
       - name: Scan local image for vulnerabilities
         run: |
-          lw-scanner image evaluate myapp:latest --upload
+          lw-scanner image evaluate myapp:latest --save
