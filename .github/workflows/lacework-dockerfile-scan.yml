@@ -26,8 +26,8 @@ jobs:
         run: |
           lacework configure \
             --account $LW_ACCOUNT \
-            --api-key $LW_API_KEY \
-            --api-secret $LW_API_SECRET \
+            --api_key $LW_API_KEY \
+            --api_secret $LW_API_SECRET \
             --noninteractive
 
       - name: Scan Dockerfile with Lacework
