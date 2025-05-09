@@ -22,7 +22,7 @@ jobs:
 
       - name: Install lw-scanner
         run: |
-          curl -sL https://github.com/lacework/lw-scanner/releases/latest/download/lw-scanner-linux-amd64 -o lw-scanner
+          curl -L https://github.com/lacework/lacework-vulnerability-scanner/releases/latest/download/lw-scanner-linux-amd64 -o lw-scanner
           chmod +x lw-scanner
           sudo mv lw-scanner /usr/local/bin/lw-scanner
 
