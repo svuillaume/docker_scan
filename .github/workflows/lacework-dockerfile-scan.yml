@@ -1,17 +1,7 @@
-name: Lacework Inline Scanner - Local Image Scan
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
 jobs:
   scan:
     runs-on: ubuntu-latest
     env:
-      LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME }}
-      LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN }}
       IMAGE_NAME: myapp
       IMAGE_TAG: ${{ github.sha }}
 
@@ -20,8 +10,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Build Docker image locally
-        run: |
-          docker build -t $IMAGE_NAME:$IMAGE_TAG .
+        run: docker build -t $IMAGE_NAME:$IMAGE_TAG .
 
       - name: Install Lacework Inline Scanner CLI
         run: |
@@ -29,9 +18,13 @@ jobs:
           chmod +x lw-scanner
           sudo mv lw-scanner /usr/local/bin/lw-scanner
 
-      - name: Configure authentication
+      - name: Manually configure authentication
         run: |
-          echo -e "$LW_ACCOUNT_NAME\n$LW_ACCESS_TOKEN" | lw-scanner config auth
+          mkdir -p ~/.lacework
+          cat <<EOF > ~/.lacework/scanner.toml
+account = "${{ secrets.LW_ACCOUNT_NAME }}"
+access_token = "${{ secrets.LW_ACCESS_TOKEN }}"
+EOF
 
       - name: Scan local image
         run: lw-scanner image evaluate $IMAGE_NAME:$IMAGE_TAG --save
