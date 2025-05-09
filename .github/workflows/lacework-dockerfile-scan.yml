@@ -29,8 +29,13 @@ jobs:
       - name: Configure lw-scanner authentication
         run: |
           mkdir -p ~/.lacework
-          echo "account = \"${LW_ACCOUNT}\"" > ~/.lacework.toml
-          echo "access_token = \"${LW_ACCESS_TOKEN}\"" >> ~/.lacework.toml
+          {
+            echo "account = \"${LW_ACCOUNT}\""
+            echo "access_token = \"${LW_ACCESS_TOKEN}\""
+          } > ~/.lacework.toml
 
-      - name: Scan Dockerfile
-        run: lw-scanner dockerfile evaluate ./Dockerfile --save
+      - name: Build Docker image
+        run: docker build -t myapp:latest .
+
+      - name: Scan Docker image
+        run: lw-scanner image evaluate myapp:latest --save
