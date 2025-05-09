@@ -37,7 +37,7 @@ jobs:
 
       - name: Scan local Docker image
         run: |
-          lacework-inline-scanner:latest evaluate $IMAGE_NAME:$IMAGE_TAG --save | tee results.stdout
+          lw-scanner image evaluate ${IMAGE_NAME}:${IMAGE_TAG} --save | tee results.stdout
 
       - name: Prepare PR summary
         if: github.event_name == 'pull_request'
