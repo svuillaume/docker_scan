@@ -1,4 +1,4 @@
-name: Lacework Container Image Scan
+name: Lacework Local Image Scan
 
 on:
   push:
@@ -7,34 +7,42 @@ on:
     branches: [ main ]
 
 jobs:
-  image-scan:
+  scan:
     runs-on: ubuntu-latest
     env:
       LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME }}
       LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN }}
+      IMAGE_NAME: myapp
+      GHA_SHA: ${{ github.sha }}
 
     steps:
       - name: Checkout source
         uses: actions/checkout@v3
 
-      - name: Build Docker image
+      - name: Build Docker image locally
         run: |
-          docker build -t myapp:latest .
+          docker build -t $IMAGE_NAME:$GHA_SHA .
 
-      - name: Install Lacework Inline Scanner CLI
-        run: |
-          curl -L https://github.com/lacework/lacework-vulnerability-scanner/releases/latest/download/lw-scanner-linux-amd64 -o lw-scanner
-          chmod +x lw-scanner
-          sudo mv lw-scanner /usr/local/bin/lw-scanner
+      - name: Scan container image for vulnerabilities using Lacework
+        uses: lacework/lw-scanner-action@v1.4.0
+        with:
+          LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME }}
+          LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN }}
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          IMAGE_TAG: ${{ env.GHA_SHA }}
+          SAVE_RESULTS_IN_LACEWORK: true
+          RESULTS_IN_GITHUB_SUMMARY: true
 
-      - name: Configure authentication for lw-scanner
+      - name: Change formatting for PR
+        if: github.event_name == 'pull_request'
         run: |
-          mkdir -p ~/.lacework
-          cat <<EOF > ~/.lacework/scanner.toml
-          account = "${{ secrets.LW_ACCOUNT_NAME }}"
-          access_token = "${{ secrets.LW_ACCESS_TOKEN }}"
-          EOF
+          echo "# Lacework Inline Scanner Result" > pr-results.md
+          echo "<pre>" >> pr-results.md
+          cat results.stdout >> pr-results.md || echo "No results found." >> pr-results.md
+          echo "</pre>" >> pr-results.md
 
-      - name: Scan Docker image for vulnerabilities
-        run: |
-          lw-scanner image evaluate myapp:latest --save
+      - name: Comment PR
+        if: github.event_name == 'pull_request'
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          filePath: pr-results.md
