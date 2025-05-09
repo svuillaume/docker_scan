@@ -1,3 +1,11 @@
+name: Lacework Local Image Scan
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
 jobs:
   scan:
     runs-on: ubuntu-latest
@@ -6,7 +14,7 @@ jobs:
       IMAGE_TAG: ${{ github.sha }}
 
     steps:
-      - name: Checkout code
+      - name: Checkout source
         uses: actions/checkout@v3
 
       - name: Build Docker image locally
@@ -18,13 +26,29 @@ jobs:
           chmod +x lw-scanner
           sudo mv lw-scanner /usr/local/bin/lw-scanner
 
-      - name: Manually configure authentication
+      - name: Manually configure Lacework auth
+        env:
+          LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME }}
+          LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN }}
         run: |
           mkdir -p ~/.lacework
-          cat <<EOF > ~/.lacework/scanner.toml
-account = "${{ secrets.LW_ACCOUNT_NAME }}"
-access_token = "${{ secrets.LW_ACCESS_TOKEN }}"
-EOF
+          echo "account = \"$LW_ACCOUNT_NAME\"" > ~/.lacework/scanner.toml
+          echo "access_token = \"$LW_ACCESS_TOKEN\"" >> ~/.lacework/scanner.toml
 
-      - name: Scan local image
-        run: lw-scanner image evaluate $IMAGE_NAME:$IMAGE_TAG --save
+      - name: Scan Docker image
+        run: |
+          lw-scanner image evaluate $IMAGE_NAME:$IMAGE_TAG --save | tee results.stdout
+
+      - name: Change formatting for PR comment
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "# Lacework Inline Scanner Result" > pr-results.md
+          echo "<pre>" >> pr-results.md
+          cat results.stdout >> pr-results.md
+          echo "</pre>" >> pr-results.md
+
+      - name: Comment PR with scan results
+        if: github.event_name == 'pull_request'
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          filePath: pr-results.md
