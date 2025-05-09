@@ -17,11 +17,12 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v3
 
-      - name: Dockerfile misconfiguration scan
+      - name: Install Lacework Inline Scanner CLI
         run: |
-          docker run --rm \
-            -e LW_ACCOUNT_NAME=$LW_ACCOUNT_NAME \
-            -e LW_ACCESS_TOKEN=$LW_ACCESS_TOKEN \
-            -v ${{ github.workspace }}:/app \
-            lacework/lacework-inline-scanner:latest \
-            dockerfile evaluate /app/Dockerfile --upload
+          curl -L https://github.com/lacework/lacework-vulnerability-scanner/releases/latest/download/lw-scanner-linux-amd64 -o lw-scanner
+          chmod +x lw-scanner
+          sudo mv lw-scanner /usr/local/bin/lw-scanner
+
+      - name: Scan Dockerfile for misconfigurations
+        run: |
+          lw-scanner dockerfile evaluate ./Dockerfile --upload
