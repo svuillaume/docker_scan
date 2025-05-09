@@ -1,54 +1,30 @@
-name: Lacework Local Image Scan
+name: Dockerfile Scan with Lacework
 
 on:
   push:
-    branches: [ main ]
+    paths:
+      - 'Dockerfile'
   pull_request:
-    branches: [ main ]
+    paths:
+      - 'Dockerfile'
 
 jobs:
-  scan:
+  dockerfile-scan:
     runs-on: ubuntu-latest
-    env:
-      IMAGE_NAME: myapp
-      IMAGE_TAG: ${{ github.sha }}
 
     steps:
-      - name: Checkout source
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Build Docker image locally
-        run: docker build -t $IMAGE_NAME:$IMAGE_TAG .
-
-      - name: Install Lacework Inline Scanner CLI
-        run: |
-          curl -L https://github.com/lacework/lacework-vulnerability-scanner/releases/latest/download/lw-scanner-linux-amd64 -o lw-scanner
-          chmod +x lw-scanner
-          sudo mv lw-scanner /usr/local/bin/lw-scanner
-
-      - name: Manually configure Lacework auth
+      - name: Run Lacework Dockerfile Scan in container
         env:
-          LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME }}
+          LW_ACCOUNT: ${{ secrets.LW_ACCOUNT }}
           LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN }}
         run: |
-          mkdir -p ~/.lacework
-          echo "account = \"$LW_ACCOUNT_NAME\"" > ~/.lacework/scanner.toml
-          echo "access_token = \"$LW_ACCESS_TOKEN\"" >> ~/.lacework/scanner.toml
-
-      - name: Scan Docker image
-        run: |
-          lw-scanner image evaluate $IMAGE_NAME:$IMAGE_TAG --save | tee results.stdout
-
-      - name: Change formatting for PR comment
-        if: github.event_name == 'pull_request'
-        run: |
-          echo "# Lacework Inline Scanner Result" > pr-results.md
-          echo "<pre>" >> pr-results.md
-          cat results.stdout >> pr-results.md
-          echo "</pre>" >> pr-results.md
-
-      - name: Comment PR with scan results
-        if: github.event_name == 'pull_request'
-        uses: thollander/actions-comment-pull-request@v2
-        with:
-          filePath: pr-results.md
+          docker run --rm \
+            -e LW_ACCOUNT=$LW_ACCOUNT \
+            -e LW_ACCESS_TOKEN=$LW_ACCESS_TOKEN \
+            -v "${PWD}:/app/src" \
+            -w /app/src \
+            lacework/codesec:stable \
+            lacework dockerfile scan --path ./Dockerfile
