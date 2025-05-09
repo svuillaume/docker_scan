@@ -38,28 +38,4 @@ jobs:
         run: |
           lw-scanner dockerfile evaluate --dockerfile ./Dockerfile --save | tee results.json
 
-      - name: Upload scan results
-        uses: actions/upload-artifact@v3
-        with:
-          name: dockerfile-scan-results
-          path: results.json
 
-      - name: Prepare PR summary
-        if: github.event_name == 'pull_request'
-        run: |
-          echo "## 🛡️ Lacework Dockerfile Scan Summary" > pr-summary.md
-          jq -r '
-            .summary |
-            "| Severity | Count |" + "\n" +
-            "|----------|-------|" + "\n" +
-            "| Critical | \(.total_critical) |" + "\n" +
-            "| High     | \(.total_high) |" + "\n" +
-            "| Medium   | \(.total_medium) |" + "\n" +
-            "| Low      | \(.total_low) |"
-          ' results.json >> pr-summary.md
-
-      - name: Comment on PR
-        if: github.event_name == 'pull_request'
-        uses: thollander/actions-comment-pull-request@v2.4.2
-        with:
-          filePath: pr-summary.md
