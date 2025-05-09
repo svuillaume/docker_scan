@@ -26,29 +26,48 @@ jobs:
           chmod +x lw-scanner
           sudo mv lw-scanner /usr/local/bin/lw-scanner
 
-      - name: Configure Lacework auth
+      - name: Set up Lacework authentication
+        run: |
+          lw-scanner config auth \
+            --account "$LW_ACCOUNT" \
+            --api_key "$LW_API_KEY" \
+            --api_secret "$LW_API_SECRET"
         env:
-          LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME }}
-          LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN }}
-        run: |
-          mkdir -p ~/.lacework
-          echo "account = \"$LW_ACCOUNT_NAME\"" > ~/.lacework/scanner.toml
-          echo "access_token = \"$LW_ACCESS_TOKEN\"" >> ~/.lacework/scanner.toml
+          LW_ACCOUNT: ${{ secrets.LW_ACCOUNT }}
+          LW_API_KEY: ${{ secrets.LW_API_KEY }}
+          LW_API_SECRET: ${{ secrets.LW_API_SECRET }}
 
-      - name: Scan local Docker image
+      - name: Evaluate image
         run: |
-          lw-scanner image evaluate ${IMAGE_NAME}:${IMAGE_TAG} --save | tee results.stdout
+          lw-scanner image evaluate $IMAGE_NAME:$IMAGE_TAG --save | tee results.json
+        env:
+          IMAGE_NAME: myapp
+          IMAGE_TAG: ${{ github.sha }}
+
+      - name: Upload scan result artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: lw-scan-results
+          path: results.json
 
       - name: Prepare PR summary
         if: github.event_name == 'pull_request'
         run: |
-          echo "# Lacework Inline Scanner Result" > pr-results.md
-          echo "<pre>" >> pr-results.md
-          cat results.stdout >> pr-results.md || echo "No results found." >> pr-results.md
-          echo "</pre>" >> pr-results.md
+          echo "## Lacework Inline Scanner Summary" > pr-results.md
+          echo "" >> pr-results.md
+          jq -r '
+            .summary | 
+            "| Severity | Count |" + "\n" + 
+            "|----------|-------|" + "\n" +
+            "| Critical | \(.total_critical) |" + "\n" +
+            "| High     | \(.total_high) |" + "\n" +
+            "| Medium   | \(.total_medium) |" + "\n" +
+            "| Low      | \(.total_low) |" + "\n"
+          ' results.json >> pr-results.md
 
       - name: Comment PR
         if: github.event_name == 'pull_request'
         uses: thollander/actions-comment-pull-request@v2
         with:
           filePath: pr-results.md
+
