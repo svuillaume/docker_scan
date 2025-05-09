@@ -12,10 +12,6 @@ jobs:
   scan:
     runs-on: ubuntu-latest
 
-    env:
-      LW_ACCOUNT: ${{ secrets.LW_ACCOUNT }}
-      LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN }}
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -26,14 +22,11 @@ jobs:
           chmod +x lw-scanner
           sudo mv lw-scanner /usr/local/bin/lw-scanner
 
-      - name: Configure lw-scanner authentication
-        run: |
-          mkdir -p ~/.lacework
-          echo "account = \"${{ env.LW_ACCOUNT }}\"" > ~/.lacework.toml
-          echo "access_token = \"${{ env.LW_ACCESS_TOKEN }}\"" >> ~/.lacework.toml
-
       - name: Build Docker image
         run: docker build -t myapp:latest .
 
-      - name: Scan Docker image
+      - name: Scan Docker image with lw-scanner
+        env:
+          LACEWORK_ACCOUNT: ${{ secrets.LW_ACCOUNT }}
+          LACEWORK_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN }}
         run: lw-scanner image evaluate myapp:latest --save
