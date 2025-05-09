@@ -22,15 +22,15 @@ jobs:
 
       - name: Install lw-scanner
         run: |
-          curl -L https://github.com/lacework/lacework-vulnerability-scanner/releases/latest/download/lw-scanner-linux-amd64 -o lw-scanner
+          curl -fL https://github.com/lacework/lacework-vulnerability-scanner/releases/latest/download/lw-scanner-linux-amd64 -o lw-scanner
           chmod +x lw-scanner
           sudo mv lw-scanner /usr/local/bin/lw-scanner
 
       - name: Configure lw-scanner authentication
         run: |
-          lw-scanner config auth \
-            --account "${LW_ACCOUNT}" \
-            --access-token "${LW_ACCESS_TOKEN}"
+          mkdir -p ~/.lacework
+          echo "account = \"${{ env.LW_ACCOUNT }}\"" > ~/.lacework.toml
+          echo "access_token = \"${{ env.LW_ACCESS_TOKEN }}\"" >> ~/.lacework.toml
 
       - name: Build Docker image
         run: docker build -t myapp:latest .
