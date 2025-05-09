@@ -26,7 +26,7 @@ jobs:
 
       - name: Dockerfile IaC scan
         run: |
-          lacework code scan --dockerfile ./Dockerfile --upload
+          lacework iac scan --dockerfile ./Dockerfile --upload
 
       - name: Container image vulnerability scan
         uses: lacework/lw-scanner-action@v1.4.0
