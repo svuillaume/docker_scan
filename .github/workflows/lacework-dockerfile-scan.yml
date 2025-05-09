@@ -27,6 +27,14 @@ jobs:
           chmod +x lw-scanner
           sudo mv lw-scanner /usr/local/bin/lw-scanner
 
+      - name: Configure authentication for lw-scanner
+        run: |
+          mkdir -p ~/.lacework
+          cat <<EOF > ~/.lacework/scanner.toml
+          account = "${{ secrets.LW_ACCOUNT_NAME }}"
+          access_token = "${{ secrets.LW_ACCESS_TOKEN }}"
+          EOF
+
       - name: Scan Docker image for vulnerabilities
         run: |
           lw-scanner image evaluate myapp:latest --save
