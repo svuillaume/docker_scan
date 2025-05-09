@@ -32,7 +32,7 @@ jobs:
           echo "access_token = \"${{ secrets.LW_ACCESS_TOKEN }}\"" >> .lacework/config.toml
 
       - name: Scan Docker image
-        run: lw-scanner image evaluate <image_name> <image_tag> \
+        run: lw-scanner image evaluate myapp latest \
                --account-name "${LW_ACCOUNT}" \
                --access-token "${LW_ACCESS_TOKEN}" \
                --save
