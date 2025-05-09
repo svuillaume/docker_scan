@@ -33,7 +33,7 @@ jobs:
 
       - name: Scan Docker image
         run: lw-scanner image evaluate myapp latest \
-               --account-name "${LW_ACCOUNT}" \
-               --access-token "${LW_ACCESS_TOKEN}" \
+               -n "${{ secrets.LW_ACCOUNT }}" \
+               -t "${{ secrets.LW_ACCESS_TOKEN }}" \
                --save
 
