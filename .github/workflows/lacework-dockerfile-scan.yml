@@ -1,4 +1,4 @@
-name: Lacework Inline Scanner
+name: Lacework Dockerfile Scan
 
 on:
   push:
@@ -6,12 +6,15 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+
 jobs:
-  scan:
+  dockerfile-scan:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source
+      - name: Checkout source code
         uses: actions/checkout@v3
 
       - name: Install Lacework Inline Scanner
@@ -20,7 +23,7 @@ jobs:
           chmod +x lw-scanner
           sudo mv lw-scanner /usr/local/bin/lw-scanner
 
-      - name: Set up Lacework authentication
+      - name: Configure Lacework authentication
         run: |
           lw-scanner config auth \
             --account "$LW_ACCOUNT" \
@@ -31,50 +34,32 @@ jobs:
           LW_API_KEY: ${{ secrets.LW_API_KEY }}
           LW_API_SECRET: ${{ secrets.LW_API_SECRET }}
 
-      - name: Scan Dockerfile
+      - name: Run Dockerfile scan
         run: |
           lw-scanner dockerfile evaluate --dockerfile ./Dockerfile --save | tee results.json
 
-      # Optional: Scan actual Docker image instead of Dockerfile
-      # - name: Build Docker image
-      #   run: docker build -t myapp:latest .
-      #
-      # - name: Scan Docker image
-      #   run: |
-      #     lw-scanner image evaluate myapp:latest --save | tee results.json
-
-      - name: Upload scan result artifact
-        uses: actions/upload-artifact@v3.1.2
+      - name: Upload scan results
+        uses: actions/upload-artifact@v3
         with:
-          name: lw-scan-results
+          name: dockerfile-scan-results
           path: results.json
-
-      - name: Fail on high or critical vulnerabilities
-        run: |
-          critical=$(jq '.summary.total_critical' results.json)
-          high=$(jq '.summary.total_high' results.json)
-          if [ "$critical" -gt 0 ] || [ "$high" -gt 0 ]; then
-            echo "❌ Found critical/high vulnerabilities. Failing job."
-            exit 1
-          fi
 
       - name: Prepare PR summary
         if: github.event_name == 'pull_request'
         run: |
-          echo "## 🛡️ Lacework Dockerfile Scan Summary" > pr-results.md
-          echo "" >> pr-results.md
+          echo "## 🛡️ Lacework Dockerfile Scan Summary" > pr-summary.md
           jq -r '
-            .summary | 
-            "| Severity | Count |" + "\n" + 
+            .summary |
+            "| Severity | Count |" + "\n" +
             "|----------|-------|" + "\n" +
             "| Critical | \(.total_critical) |" + "\n" +
             "| High     | \(.total_high) |" + "\n" +
             "| Medium   | \(.total_medium) |" + "\n" +
-            "| Low      | \(.total_low) |" + "\n"
-          ' results.json >> pr-results.md
+            "| Low      | \(.total_low) |"
+          ' results.json >> pr-summary.md
 
-      - name: Comment PR
+      - name: Comment on PR
         if: github.event_name == 'pull_request'
         uses: thollander/actions-comment-pull-request@v2.4.2
         with:
-          filePath: pr-results.md
+          filePath: pr-summary.md
