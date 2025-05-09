@@ -14,11 +14,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Install Latest Lacework CLI
+      - name: Install Lacework CLI
         run: |
-          curl -sSL https://github.com/lacework/go-sdk/releases/latest/download/lacework-cli-linux-amd64.tar.gz -o lacework.tar.gz
-          tar -xzf lacework.tar.gz
-          sudo mv lacework-cli-linux-amd64/lacework /usr/local/bin/lacework
+          curl https://raw.githubusercontent.com/lacework/go-sdk/main/cli/install.sh | bash
           lacework version
 
       - name: Scan Dockerfile with Lacework
