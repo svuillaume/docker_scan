@@ -1,4 +1,4 @@
-name: Lacework Dockerfile Scan
+name: Lacework Container Image Scan
 
 on:
   push:
@@ -7,15 +7,21 @@ on:
     branches: [ main ]
 
 jobs:
-  dockerfile-scan:
+  image-scan:
     runs-on: ubuntu-latest
     env:
       LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME }}
       LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN }}
+      IMAGE_NAME: myapp
+      IMAGE_TAG: ${{ github.sha }}
 
     steps:
       - name: Checkout source
         uses: actions/checkout@v3
+
+      - name: Build Docker image
+        run: |
+          docker build -t $IMAGE_NAME:$IMAGE_TAG .
 
       - name: Install Lacework Inline Scanner CLI
         run: |
@@ -23,6 +29,6 @@ jobs:
           chmod +x lw-scanner
           sudo mv lw-scanner /usr/local/bin/lw-scanner
 
-      - name: Scan Dockerfile for misconfigurations
+      - name: Scan Docker image for vulnerabilities
         run: |
-          lw-scanner dockerfile evaluate ./Dockerfile --upload
+          lw-scanner image evaluate $IMAGE_NAME:$IMAGE_TAG --upload
