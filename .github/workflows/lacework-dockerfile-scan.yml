@@ -1,4 +1,4 @@
-name: Lacework IaC & Image Scan
+name: Lacework Dockerfile Scan
 
 on:
   push:
@@ -7,42 +7,21 @@ on:
     branches: [ main ]
 
 jobs:
-  lacework-scan:
+  dockerfile-scan:
     runs-on: ubuntu-latest
     env:
       LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME }}
       LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN }}
-      IMAGE_NAME: myregistry.example.com/myapp
-      IMAGE_TAG: ${{ github.sha }}
 
     steps:
-      - name: Checkout code
+      - name: Checkout source
         uses: actions/checkout@v3
 
-      - name: Download Lacework Inline Scanner
+      - name: Dockerfile misconfiguration scan
         run: |
-          curl -L https://github.com/lacework/lacework-vulnerability-scanner/releases/latest/download/lw-scanner-linux-amd64 -o lw-scanner
-          chmod +x lw-scanner
-          sudo mv lw-scanner /usr/local/bin/lw-scanner
-
-      - name: Scan Dockerfile for misconfigurations
-        run: |
-          lw-scanner dockerfile evaluate ./Dockerfile --upload
-
-      - name: Scan container image for vulnerabilities
-        run: |
-          lw-scanner image evaluate $IMAGE_NAME:$IMAGE_TAG --upload
-
-      - name: Format PR result (optional)
-        if: github.event_name == 'pull_request'
-        run: |
-          echo "# Lacework Scanner Results" > pr-results.md
-          echo "<pre>" >> pr-results.md
-          cat results.stdout >> pr-results.md || echo "No output captured"
-          echo "</pre>" >> pr-results.md
-
-      - name: Comment PR (optional)
-        if: github.event_name == 'pull_request'
-        uses: thollander/actions-comment-pull-request@v2
-        with:
-          filePath: pr-results.md
+          docker run --rm \
+            -e LW_ACCOUNT_NAME=$LW_ACCOUNT_NAME \
+            -e LW_ACCESS_TOKEN=$LW_ACCESS_TOKEN \
+            -v ${{ github.workspace }}:/app \
+            lacework/lacework-inline-scanner:latest \
+            dockerfile evaluate /app/Dockerfile --upload
