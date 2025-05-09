@@ -1,4 +1,3 @@
-
 name: Lacework Dockerfile Scan
 
 on:
@@ -30,10 +29,8 @@ jobs:
       - name: Configure lw-scanner auth
         run: |
           mkdir -p ~/.lacework
-          cat <<EOF > ~/.lacework.toml
-account = "${LW_ACCOUNT}"
-access_token = "${LW_ACCESS_TOKEN}"
-EOF
+          echo "account = \"${LW_ACCOUNT}\"" > ~/.lacework.toml
+          echo "access_token = \"${LW_ACCESS_TOKEN}\"" >> ~/.lacework.toml
 
       - name: Scan Dockerfile
         run: |
