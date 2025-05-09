@@ -31,6 +31,8 @@ jobs:
           echo "account = \"${{ secrets.LW_ACCOUNT }}\"" > .lacework/config.toml
           echo "access_token = \"${{ secrets.LW_ACCESS_TOKEN }}\"" >> .lacework/config.toml
       - name: Scan Docker image
-        run: lw-scanner image evaluate myapp latest -n "partner-demo" -t "_2c1709489fbf5bb167a33f2adb43b231" --save
-      
+        run: lw-scanner image evaluate myapp latest --account-name "partner-demo.lacework.net" --access-token "_38e86ea8ad1741361f82fbd31c2abf42" --save
+
+
+     
 
