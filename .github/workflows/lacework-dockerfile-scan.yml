@@ -1,4 +1,4 @@
-name: Lacework Image Scan from Dockerfile
+name: Lacework Local Image Scan
 
 on:
   push:
@@ -17,16 +17,20 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v3
 
-      - name: Build Docker image locally
+      - name: Build Docker image
         run: |
           docker build -t myapp:latest .
 
-      - name: Install Lacework Inline Scanner
+      - name: Install Lacework Inline Scanner CLI
         run: |
           curl -L https://github.com/lacework/lacework-vulnerability-scanner/releases/latest/download/lw-scanner-linux-amd64 -o lw-scanner
           chmod +x lw-scanner
           sudo mv lw-scanner /usr/local/bin/lw-scanner
 
-      - name: Scan local image for vulnerabilities
+      - name: Authenticate Lacework Scanner
+        run: |
+          lw-scanner config auth --account $LW_ACCOUNT_NAME --token $LW_ACCESS_TOKEN
+
+      - name: Scan Docker image
         run: |
           lw-scanner image evaluate myapp:latest --save
