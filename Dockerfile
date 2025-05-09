@@ -4,5 +4,5 @@ FROM ubuntu:18.04
 RUN apt-get update && \
     apt-get install -y openjdk-8-jre wget && \
     apt-get clean
-CMD ["echo", "hello2 Starting vulnerable app..."]
+CMD ["echo", "hello Starting vulnerable app..."]
 
