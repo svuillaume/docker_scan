@@ -1,4 +1,4 @@
 FROM alpine:latest
 
-CMD ["echo", "ello2world"]
+CMD ["echo", "hello2world"]
 
