@@ -1,5 +1,4 @@
-name: Lacework Inline Scanner (Dockerfile)
-
+name: Lacework Inline Scanner
 on:
   push:
     branches: [ main ]
@@ -12,7 +11,7 @@ jobs:
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@v3.6.0
+        uses: actions/checkout@v3
 
       - name: Install Lacework Inline Scanner
         run: |
