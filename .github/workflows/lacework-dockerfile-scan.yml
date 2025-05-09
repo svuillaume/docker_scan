@@ -2,11 +2,10 @@ name: Lacework Dockerfile Scan
 
 on:
   push:
-    paths:
-      - 'Dockerfile'
+   branches: [ main ]
+   
   pull_request:
-    paths:
-      - 'Dockerfile'
+    branches: [ main ]
 
 jobs:
   dockerfile-scan:
