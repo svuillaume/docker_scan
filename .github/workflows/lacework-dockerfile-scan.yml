@@ -1,12 +1,25 @@
+
+name: Lacework Dockerfile Scan
+
+on:
+  push:
+    paths:
+      - 'Dockerfile'
+  pull_request:
+    paths:
+      - 'Dockerfile'
+
 jobs:
-  scan:
+  dockerfile-scan:
     runs-on: ubuntu-latest
+
     env:
       LW_ACCOUNT: ${{ secrets.LW_ACCOUNT }}
       LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN }}
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
       - name: Install lw-scanner
         run: |
@@ -14,14 +27,20 @@ jobs:
             -o /usr/local/bin/lw-scanner
           chmod +x /usr/local/bin/lw-scanner
 
-      - name: Configure auth non-interactively
+      - name: Configure lw-scanner auth
         run: |
           mkdir -p ~/.lacework
           cat <<EOF > ~/.lacework.toml
-[default]
 account = "${LW_ACCOUNT}"
 access_token = "${LW_ACCESS_TOKEN}"
 EOF
 
       - name: Scan Dockerfile
-        run: lw-scanner dockerfile evaluate ./Dockerfile --save
+        run: |
+          lw-scanner dockerfile evaluate ./Dockerfile --save | tee scan-results.txt
+
+      - name: Upload scan results
+        uses: actions/upload-artifact@v3
+        with:
+          name: lacework-scan-results
+          path: scan-results.txt
