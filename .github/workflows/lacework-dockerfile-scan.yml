@@ -1,4 +1,5 @@
 name: Lacework Inline Scanner
+
 on:
   push:
     branches: [ main ]
@@ -15,7 +16,7 @@ jobs:
 
       - name: Install Lacework Inline Scanner
         run: |
-          curl -L https://github.com/lacework/lacework-vulnerability-scanner/releases/latest/download/lw-scanner-linux-amd64 -o lw-scanner
+          curl -fL https://github.com/lacework/lacework-vulnerability-scanner/releases/latest/download/lw-scanner-linux-amd64 -o lw-scanner
           chmod +x lw-scanner
           sudo mv lw-scanner /usr/local/bin/lw-scanner
 
@@ -34,16 +35,33 @@ jobs:
         run: |
           lw-scanner dockerfile evaluate --dockerfile ./Dockerfile --save | tee results.json
 
+      # Optional: Scan actual Docker image instead of Dockerfile
+      # - name: Build Docker image
+      #   run: docker build -t myapp:latest .
+      #
+      # - name: Scan Docker image
+      #   run: |
+      #     lw-scanner image evaluate myapp:latest --save | tee results.json
+
       - name: Upload scan result artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v3.1.3
         with:
           name: lw-scan-results
           path: results.json
 
+      - name: Fail on high or critical vulnerabilities
+        run: |
+          critical=$(jq '.summary.total_critical' results.json)
+          high=$(jq '.summary.total_high' results.json)
+          if [ "$critical" -gt 0 ] || [ "$high" -gt 0 ]; then
+            echo "❌ Found critical/high vulnerabilities. Failing job."
+            exit 1
+          fi
+
       - name: Prepare PR summary
         if: github.event_name == 'pull_request'
         run: |
-          echo "## Lacework Dockerfile Scan Summary" > pr-results.md
+          echo "## 🛡️ Lacework Dockerfile Scan Summary" > pr-results.md
           echo "" >> pr-results.md
           jq -r '
             .summary | 
