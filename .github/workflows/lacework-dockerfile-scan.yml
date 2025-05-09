@@ -18,7 +18,7 @@ jobs:
         run: |
           curl -sSL https://github.com/lacework/go-sdk/releases/latest/download/lacework-cli-linux-amd64.tar.gz -o lacework.tar.gz
           tar -xzf lacework.tar.gz
-          sudo mv lacework-cli-linux-amd64/lacework /usr/local/bin/lacework
+          sudo mv bin/lacework /usr/local/bin/lacework
           lacework version
 
       - name: Scan Dockerfile with Lacework
