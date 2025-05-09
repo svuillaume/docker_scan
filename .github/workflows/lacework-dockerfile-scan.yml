@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@v3.6.0
+        uses: actions/checkout@v3
 
       - name: Install Lacework Inline Scanner
         run: |
@@ -35,7 +35,7 @@ jobs:
           lw-scanner dockerfile evaluate --dockerfile ./Dockerfile --save | tee results.json
 
       - name: Upload scan result artifact
-        uses: actions/upload-artifact@v3.1.3
+        uses: actions/upload-artifact@v3
         with:
           name: lw-scan-results
           path: results.json
