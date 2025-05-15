@@ -30,6 +30,5 @@ jobs:
           mkdir -p .lacework
           echo "account = \"${{ secrets.LW_ACCOUNT }}\"" > .lacework/config.toml
           echo "access_token = \"${{ secrets.LW_ACCESS_TOKEN }}\"" >> .lacework/config.toml
-
       - name: Scan Docker image
-        run: lw-scanner image evaluate samv:latest --save
+        run: lw-scanner image evaluate samv latest -n "${{ secrets.LW_ACCOUNT }}" -t "${{ secrets.LW_ACCESS_TOKEN }}"  --save 
