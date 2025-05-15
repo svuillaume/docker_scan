@@ -2,7 +2,7 @@
 FROM node:14.0.0
 
 # Set an environment variable with a "secret"
-ENV SECRET_API_KEY="hellowordd"
+ENV SECRET_API_KEY="helloword"
 ENV DB_PASSWORD="rootpassword123"
 
 # Set workdir and copy app
