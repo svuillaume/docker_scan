@@ -33,10 +33,10 @@ jobs:
 
       - name: Scan Docker image
         run: |
-          lw-scanner image evaluate samv:latest --save | tee lw-scan-output.txt
+          lw-scanner image evaluate samv:latest --output json --save | tee lw-scan-output.json
 
       - name: Upload scan output
         uses: actions/upload-artifact@v4
         with:
           name: lw-scan-output
-          path: lw-scan-output.txt
+          path: lw-scan-output.json
