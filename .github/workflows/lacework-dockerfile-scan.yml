@@ -1,4 +1,4 @@
-name: Lacework Dockerfile Scan
+name: Lacework Dockerfile CVE Scan
 
 on:
   push:
@@ -20,7 +20,7 @@ jobs:
       IMAGE_TAG: latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Install lw-scanner
@@ -45,5 +45,5 @@ jobs:
       - name: Upload scan report
         uses: actions/upload-artifact@v4
         with:
-          name: lacework-docker-scan
+          name: lw-scanner-results
           path: lw-scan-output.txt
