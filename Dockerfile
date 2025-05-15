@@ -5,7 +5,7 @@ FROM ubuntu:16.04
 
 RUN apt-get update && apt-get install -y curl
 
-ENV SECRET_KEY=hardcoded-super-secret
+ENV SECRET_KEY=123456
 
 WORKDIR /app
 
