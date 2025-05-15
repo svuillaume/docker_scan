@@ -1,9 +1,10 @@
 name: Build and Push to ECR
 
 on:
-  push:
-    branches: [ "main" ]
-  workflow_dispatch:
+  workflow_run:
+    workflows: ["Build App"]
+    types:
+      - completed
 
 jobs:
   build-and-push:
