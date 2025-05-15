@@ -1,16 +1,30 @@
-FROM python:2.7  # ❌ EOL base image with many CVEs
+FROM php:7.4-apache  # ✅ Compatible with DVWA, but EOL for some CVE scanners
 
-WORKDIR /app
+WORKDIR /var/www/html
 
-# Copy vulnerable app
-COPY vulnerable.py .
+# ❌ Hardcoded root password (bad practice)
+RUN echo "root:superinsecure123" > /root/credentials.txt
 
-# ❌ Install outdated, vulnerable packages
-RUN pip install --no-cache-dir flask==0.10 requests==2.6.0
+# ✅ Install required packages
+RUN apt-get update && apt-get install -y \
+    git \
+    mariadb-server \
+    unzip \
+    && docker-php-ext-install mysqli pdo pdo_mysql
 
-# ❌ Simulated hardcoded root password in image layer
-RUN echo "root:root" > /root/credentials.txt
+# ✅ Enable Apache mod_rewrite
+RUN a2enmod rewrite
 
-EXPOSE 5000
+# ✅ Clone DVWA source
+RUN git clone https://github.com/digininja/DVWA.git .
 
-CMD ["python", "vulnerable.py"]
+# ✅ Set write permissions for DVWA config
+RUN chown -R www-data:www-data /var/www/html && chmod -R 755 /var/www/html
+
+# ✅ Copy default config if needed (optional)
+RUN cp config/config.inc.php.dist config/config.inc.php
+
+EXPOSE 80
+
+CMD ["apache2-foreground"]
+
