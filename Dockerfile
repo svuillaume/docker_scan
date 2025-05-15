@@ -1,18 +1,11 @@
-FROM debian:9.5
+FROM ubuntu:18.04
 
-# Replace default mirror with Debian archive
-RUN sed -i 's/deb.debian.org/archive.debian.org/g' /etc/apt/sources.list && \
-    sed -i '/security.debian.org/d' /etc/apt/sources.list && \
-    echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid-until
-
-# Update and install vulnerable packages
+# Install outdated but still vulnerable system tools
 RUN apt-get update && \
-    apt-get install -y \
-      openssl \
-      passwd && \
+    apt-get install -y openssl passwd && \
     echo "root:weakpassword123" | chpasswd
 
-# Add entrypoint script
+# Copy entrypoint script
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
