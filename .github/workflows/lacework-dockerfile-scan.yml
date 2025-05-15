@@ -34,8 +34,9 @@ jobs:
 
       - name: Authenticate lw-scanner
         run: |
-          lw-scanner config auth \
-            --account "${{ secrets.LW_ACCOUNT }}" \
+          lw-scanner configure auth \
+            --profile default \
+            --subdomain "${{ secrets.LW_ACCOUNT }}" \
             --access-token "${{ secrets.LW_ACCESS_TOKEN }}"
 
       - name: Scan Docker image with lw-scanner
