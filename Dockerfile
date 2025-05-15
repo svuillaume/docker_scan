@@ -1,23 +1,18 @@
-# Use an outdated Node.js base image (known vulnerabilities)
-FROM node:14.0.0
+# Use an OpenJDK base image
+FROM openjdk:8-jdk-alpine
 
-# Set an environment variable with a "secret"
-ENV SECRET_API_KEY="helloword"
-ENV DB_PASSWORD="rootpassword123"
-
-# Set workdir and copy app
+# Set work directory
 WORKDIR /app
-COPY . .
 
-# Install a known vulnerable version of express
-RUN npm install express@4.16.0
+# Download a vulnerable version of log4j (2.14.1 is vulnerable to Log4Shell)
+ADD https://repo1.maven.org/maven2/org/apache/logging/log4j/log4j-core/2.14.1/log4j-core-2.14.1.jar log4j-core.jar
+ADD https://repo1.maven.org/maven2/org/apache/logging/log4j/log4j-api/2.14.1/log4j-api-2.14.1.jar log4j-api.jar
 
-# Hardcoded secret in source code
-RUN echo "module.exports = { secret: 'veryHardcodedSecret' };" > secret.js
+# Add your vulnerable Java app (below)
+COPY VulnerableApp.java .
 
-# Run a simple vulnerable server
-RUN echo 'const express = require("express"); const app = express(); app.get("/", (req, res) => res.send("Hello, world!")); app.listen(3000);' > index.js
+# Compile it
+RUN javac -cp "log4j-core.jar:log4j-api.jar" VulnerableApp.java
 
-EXPOSE 3000
-
-CMD ["node", "index.js"]
+# Run the app on container start
+CMD ["java", "-cp", ".:log4j-core.jar:log4j-api.jar", "VulnerableApp"]
