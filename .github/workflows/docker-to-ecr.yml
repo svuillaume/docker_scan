@@ -10,6 +10,9 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
 
+    env:
+      LW_SCANNER_SAVE_RESULTS: true
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
