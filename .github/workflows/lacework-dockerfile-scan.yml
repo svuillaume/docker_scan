@@ -4,23 +4,16 @@ on:
   push:
     paths:
       - 'Dockerfile'
-      - '**/*.java'
-      - '**/*.jar'
   pull_request:
     paths:
       - 'Dockerfile'
-      - '**/*.java'
-      - '**/*.jar'
 
 jobs:
   scan:
     runs-on: ubuntu-latest
-    env:
-      IMAGE_NAME: samv
-      IMAGE_TAG: latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout repo
         uses: actions/checkout@v3
 
       - name: Install lw-scanner
@@ -30,21 +23,20 @@ jobs:
           sudo mv lw-scanner /usr/local/bin/lw-scanner
 
       - name: Build Docker image
-        run: docker build -t $IMAGE_NAME:$IMAGE_TAG .
+        run: docker build -t samv:latest .
 
-      - name: Authenticate lw-scanner
+      - name: Configure lw-scanner authentication
         run: |
-          lw-scanner configure auth \
-            --profile default \
-            --subdomain "${{ secrets.LW_ACCOUNT }}" \
-            --access-token "${{ secrets.LW_ACCESS_TOKEN }}"
+          mkdir -p .lacework
+          echo "account = \"${{ secrets.LW_ACCOUNT }}\"" > .lacework/config.toml
+          echo "access_token = \"${{ secrets.LW_ACCESS_TOKEN }}\"" >> .lacework/config.toml
 
-      - name: Scan Docker image with lw-scanner
+      - name: Scan Docker image
         run: |
-          lw-scanner image evaluate $IMAGE_NAME:$IMAGE_TAG --save | tee lw-scan-output.txt
+          lw-scanner image evaluate samv:latest --save | tee lw-scan-output.txt
 
-      - name: Upload scan report
+      - name: Upload scan output
         uses: actions/upload-artifact@v4
         with:
-          name: lw-scanner-results
+          name: lw-scan-output
           path: lw-scan-output.txt
