@@ -1,6 +1,6 @@
 FROM openjdk:8
 
-WORKDIR /app
+WORKDIR /tmp
 
 # Download vulnerable Log4J JARs
 ADD https://repo1.maven.org/maven2/org/apache/logging/log4j/log4j-core/2.14.1/log4j-core-2.14.1.jar .
