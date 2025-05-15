@@ -1,35 +1,23 @@
-# Use an official PHP + Apache image
-FROM php:8.1-apache
+# Use an outdated Node.js base image (known vulnerabilities)
+FROM node:14.0.0
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    git \
-    libpng-dev \
-    libjpeg-dev \
-    libfreetype6-dev \
-    libonig-dev \
-    libxml2-dev \
-    zip \
-    unzip \
-    mariadb-server \
-    && docker-php-ext-install mysqli pdo pdo_mysql gd
+# Set an environment variable with a "secret"
+ENV SECRET_API_KEY="hardcoded-super-secret-key"
+ENV DB_PASSWORD="rootpassword123"
 
-# Enable Apache mod_rewrite
-RUN a2enmod rewrite
+# Set workdir and copy app
+WORKDIR /app
+COPY . .
 
-# Clone DVWA
-RUN git clone https://github.com/digininja/DVWA.git /var/www/html
+# Install a known vulnerable version of express
+RUN npm install express@4.16.0
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html
+# Hardcoded secret in source code
+RUN echo "module.exports = { secret: 'veryHardcodedSecret' };" > secret.js
 
-# Copy DVWA config
-COPY config.inc.php /var/www/html/config/config.inc.php
+# Run a simple vulnerable server
+RUN echo 'const express = require("express"); const app = express(); app.get("/", (req, res) => res.send("Hello, world!")); app.listen(3000);' > index.js
 
-# Expose web port
-EXPOSE 80
+EXPOSE 3000
 
-# Start both Apache and MySQL when the container runs
-CMD service mysql start && apache2-foreground
-
+CMD ["node", "index.js"]
