@@ -1,5 +1,3 @@
-name: Lacework Dockerfile CVE Scan
-
 on:
   push:
     paths:
@@ -31,12 +29,14 @@ jobs:
           echo "account = \"${{ secrets.LW_ACCOUNT }}\"" > .lacework/config.toml
           echo "access_token = \"${{ secrets.LW_ACCESS_TOKEN }}\"" >> .lacework/config.toml
 
-      - name: Scan Docker image
+      - name: Scan Docker image and save results
         run: |
-          lw-scanner image evaluate samv:latest --output json --save | tee lw-scan-output.json
+          mkdir -p scan-results
+          lw-scanner image evaluate samv:latest --save
+          cp .lacework/scans/image-evaluation-*.json scan-results/scan-result.json
 
-      - name: Upload scan output
+      - name: Upload scan result
         uses: actions/upload-artifact@v4
         with:
-          name: lw-scan-output
-          path: lw-scan-output.json
+          name: lw-scanner-result
+          path: scan-results/scan-result.json
