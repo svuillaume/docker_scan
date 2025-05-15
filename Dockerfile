@@ -1,17 +1,35 @@
-#FROM alpine:latest
-#CMD ["echo", "helloworld"]
+# Use an official PHP + Apache image
+FROM php:8.1-apache
 
-FROM ubuntu:16.04
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip \
+    mariadb-server \
+    && docker-php-ext-install mysqli pdo pdo_mysql gd
 
-RUN apt-get update && apt-get install -y curl
+# Enable Apache mod_rewrite
+RUN a2enmod rewrite
 
-ENV SECRET_KEY=123456
+# Clone DVWA
+RUN git clone https://github.com/digininja/DVWA.git /var/www/html
 
-WORKDIR /app
+# Set permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html
 
-RUN echo "<?php echo 'Vulnerable App'; ?>" > index.php
+# Copy DVWA config
+COPY config.inc.php /var/www/html/config/config.inc.php
 
+# Expose web port
 EXPOSE 80
 
-CMD ["bash"]
+# Start both Apache and MySQL when the container runs
+CMD service mysql start && apache2-foreground
 
