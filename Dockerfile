@@ -21,10 +21,11 @@ RUN git clone https://github.com/digininja/DVWA.git .
 # ✅ Set write permissions for DVWA config
 RUN chown -R www-data:www-data /var/www/html && chmod -R 755 /var/www/html
 
-# ✅ Copy default config if needed (optional)
+# ✅ Copy default config if needed
 RUN cp config/config.inc.php.dist config/config.inc.php
 
 EXPOSE 80
 
 CMD ["apache2-foreground"]
+
 
