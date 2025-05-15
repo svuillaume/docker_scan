@@ -1,31 +1,19 @@
-FROM php:7.4-apache  # ✅ Compatible with DVWA, but EOL for some CVE scanners
+# Use a known vulnerable Debian version (CVE-rich)
+FROM debian:9.5
 
-WORKDIR /var/www/html
+# Add outdated and vulnerable packages
+RUN apt-get update && \
+    apt-get install -y \
+      openssl=1.1.0f-3+deb9u2 \
+      libssl1.1=1.1.0f-3+deb9u2 \
+      curl && \
+    apt-get clean
 
-# ❌ Hardcoded root password (bad practice)
-RUN echo "root:superinsecure123" > /root/credentials.txt
+# Simulate a dummy app
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-# ✅ Install required packages
-RUN apt-get update && apt-get install -y \
-    git \
-    mariadb-server \
-    unzip \
-    && docker-php-ext-install mysqli pdo pdo_mysql
+CMD ["/entrypoint.sh"]
 
-# ✅ Enable Apache mod_rewrite
-RUN a2enmod rewrite
-
-# ✅ Clone DVWA source
-RUN git clone https://github.com/digininja/DVWA.git .
-
-# ✅ Set write permissions for DVWA config
-RUN chown -R www-data:www-data /var/www/html && chmod -R 755 /var/www/html
-
-# ✅ Copy default config if needed
-RUN cp config/config.inc.php.dist config/config.inc.php
-
-EXPOSE 80
-
-CMD ["apache2-foreground"]
 
 
