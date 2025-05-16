@@ -25,7 +25,9 @@ jobs:
 
       - name: Run Lacework IaC Scan
         run: |
-          docker run --env-file env.list \
-            -v "$(pwd):/tmp/scan" \
+          docker run --rm \
+            --env-file env.list \
+            -v "$(pwd):/app/src" \
+            -w /app/src \
             lacework/codesec:stable \
-            iac scan --directory /tmp/scan
+            iac scan --directory=.
