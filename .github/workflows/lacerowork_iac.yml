@@ -25,7 +25,9 @@ jobs:
           #echo "EXIT_FLAG=HIGH=1" >> env.list 
 
       - name: Set directory permissions
-        run: chmod -R 777 .terraform
+        run: |
+          mkdir -p .terraform
+          chmod -R 777 .terraform
 
       - name: Scan the repo for vulnerabilities in IaC
         run: |
