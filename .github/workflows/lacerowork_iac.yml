@@ -22,7 +22,12 @@ jobs:
           echo "LW_API_KEY=${{ secrets.LW_API_KEY }}" >> env.list
           echo "LW_API_SECRET=${{ secrets.LW_API_SECRET }}" >> env.list
           echo "EXIT_FLAG=CRITICAL=1" >> env.list
+      
+      # Make sure the directory has the right permissions
+      - name: Set directory permissions
+        run: |
+          chmod -R 777 .
           
       - name: Scan the repo for vulnerabilities in IaC
         run: |
-          docker run --env-file env.list -v "$(pwd):/app/src:rw" --user $(id -u):$(id -g) -w /app/src lacework/codesec:stable lacework iac scan --directory=.
+          docker run --env-file env.list -v "$(pwd):/app/src:rw" -w /app/src lacework/codesec:stable lacework iac scan --directory=.
