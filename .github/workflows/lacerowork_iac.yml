@@ -15,9 +15,6 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Set permissions to avoid Docker write errors
-        run: chmod -R 777 .
-
       - name: Create environment variables file
         run: |
           echo "LW_ACCOUNT=${{ secrets.LW_ACCOUNT }}" >> env.list
@@ -28,11 +25,10 @@ jobs:
       - name: Run Lacework IaC Scan (Terraform only)
         run: |
           docker run --env-file env.list \
-          -v "$(pwd):/src" \
-          lacework/codesec:stable \
-          /bin/sh -c "
-          mkdir -p /tmp/scan &&
-          find /src -name '*.tf' -exec cp --parents {} /tmp/scan \; &&
-          lacework iac scan --directory=/tmp/scan"
+            -v "$(pwd):/src" \
+            lacework/codesec:stable \
+            /bin/sh -c "mkdir -p /tmp/scan && \
+            find /src -name '*.tf' -exec cp --parents {} /tmp/scan \; && \
+            lacework iac scan --directory=/tmp/scan"
 
 
