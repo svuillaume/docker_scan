@@ -2,27 +2,48 @@ provider "aws" {
   region = "us-east-1"
 }
 
-resource "aws_s3_bucket" "secure" {
-  bucket = "my-secure-bucket-example"
+resource "aws_s3_bucket" "bad_bucket" {
+  bucket = "lacework-insecure-bucket"
+  acl    = "public-read"  # ❌ Public access
 
   versioning {
-    enabled = true
-  }
-
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        sse_algorithm = "AES256"
-      }
-    }
+    enabled = false  # ❌ No versioning
   }
 }
 
-resource "aws_s3_bucket_public_access_block" "block" {
-  bucket = aws_s3_bucket.secure.id
+resource "aws_security_group" "bad_sg" {
+  name        = "open-sg"
+  description = "Allows all inbound traffic"  # ❌ Overly permissive
+  vpc_id      = "vpc-12345678"
 
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
+  ingress {
+    from_port   = 0
+    to_port     = 65535
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]  # ❌ Open to the world
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
+
+resource "aws_instance" "bad_instance" {
+  ami           = "ami-0c55b159cbfafe1f0"
+  instance_type = "t2.micro"
+
+  user_data = <<EOF
+#!/bin/bash
+echo 'PasswordAuthentication yes' >> /etc/ssh/sshd_config
+service ssh restart
+EOF
+  # ❌ Enables SSH password login
+
+  tags = {
+    Name = "lacework-bad-instance"
+  }
+}
+ 
