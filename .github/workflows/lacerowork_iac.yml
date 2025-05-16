@@ -2,20 +2,20 @@ name: Lacework IaC Scan
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
 
 jobs:
-  scan:
+  iac-scan:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout source code
         uses: actions/checkout@v3
 
-      - name: Create environment variables file
+      - name: Create Lacework env.list
         run: |
           echo "LW_ACCOUNT=${{ secrets.LW_ACCOUNT }}" >> env.list
           echo "LW_API_KEY=${{ secrets.LW_API_KEY }}" >> env.list
@@ -23,11 +23,11 @@ jobs:
           echo "EXIT_FLAG=CRITICAL=1,HIGH=1" >> env.list
           echo "CI_REPO_URL=https://github.com/${{ github.repository }}" >> env.list
 
-      - name: Run Lacework IaC Scan
+      - name: Run Lacework IaC Scan (your exact command)
         run: |
           docker run --rm \
             --env-file env.list \
             -v "$(pwd):/app/src" \
             -w /app/src \
             lacework/codesec:stable \
-            iac scan --directory=.
+            lacework iac scan --directory=.
