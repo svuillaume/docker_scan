@@ -2,9 +2,9 @@
 
 ## 🧪 Demos & Use Cases
 
-### Dashboard overview and search
+### 📜 Demo 1: Dashboard and Threat investigation Search (CWPP use case)
 
-### ☁️ Demo 1: Cloud Integration Setup
+### ☁️ Demo 2: Cloud Integration Setup (CSPM use case)
 - Navigate to: `Settings → Cloud Accounts`
 - Click **Add Cloud Account**
 - Enable:
@@ -13,7 +13,7 @@
   - CloudTrail-based Threat Detection
 - Supports AWS, Azure, GCP — no agents required
 
-### 🐳 Demo 2: Container Vulnerability Detection
+### 🐳 Demo 3: Container Vulnerability Detection (CSPM with vulnerability sanning)
 - Navigate to: `Vulnerabilities → Containers`
 - Click **Select All Images**, group by **Repo**
 - Filter and analyze:
@@ -25,17 +25,10 @@
   - Inline scanner auto-fails builds on critical CVEs
   - Enables “shift-left” security in development pipelines
 
-### 📜 Demo 3: GenAI for Alert Triage
+### 📜 Demo 4: GenAI for Alert Triage
 - Ask: _"What does this alert mean?"_
 - Returns:
   - 🔍 Plain-language alert explanation
   - 🛠️ Recommended remediation
   - 📄 Summary ready for reporting or audit  
 
-### ⚙️ Demo 4: Workload Runtime Threat Detection
-- Navigate to: `Investigate → Workloads`
-- Detect:
-  - Suspicious runtime behavior
-  - Lateral movement
-  - Privilege escalation attempts
-- Automatically correlated with Polygraph for high-confidence alerts
