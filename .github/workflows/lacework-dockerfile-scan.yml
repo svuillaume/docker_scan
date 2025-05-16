@@ -30,5 +30,25 @@ jobs:
           mkdir -p .lacework
           echo "account = \"${{ secrets.LW_ACCOUNT }}\"" > .lacework/config.toml
           echo "access_token = \"${{ secrets.LW_ACCESS_TOKEN }}\"" >> .lacework/config.toml
+
+      - name: Create OPA policy to block CVEs > 9
+        run: |
+          mkdir -p ./policies
+          cat <<EOF > ./policies/high_severity.rego
+          package lacework.docker
+
+          deny[msg] {
+            vuln := input.vulnerabilities[_]
+            vuln.severity_score > 9
+            msg := sprintf("CVE %v has score %.1f", [vuln.cve_id, vuln.severity_score])
+          }
+          EOF
+
       - name: Scan Docker image
-        run: lw-scanner image evaluate samv latest -n "${{ secrets.LW_ACCOUNT }}" -t "${{ secrets.LW_ACCESS_TOKEN }}"  --save 
+        run: |
+          lw-scanner image evaluate samv latest \
+            -n "${{ secrets.LW_ACCOUNT }}" \
+            -t "${{ secrets.LW_ACCESS_TOKEN }}" \
+            --evaluate \
+            --opa-path ./policies \
+            --save
