@@ -11,7 +11,7 @@ COPY . /app
 RUN pip install Flask==0.10  # ⚠️ multiple known CVEs
 
 # Simulate secret exposure in environment
-ENV AWS_SECRET_ACCESS_KEY="AKIAFAKESECRETKEY1234"
+ENV AWS_SECRET_ACCESS_KEY="AKIAFAKESECRETKE"
 ENV DB_PASSWORD="root"
 
 # Expose port
