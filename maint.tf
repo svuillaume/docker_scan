@@ -43,6 +43,6 @@ EOF
   # ❌ Enables SSH password login
 
   tags = {
-    Name = "lacework-bad-ec2-instance"
+    Name = "lacework-bad-instance"
   }
 }
