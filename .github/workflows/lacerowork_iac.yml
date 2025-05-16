@@ -22,10 +22,10 @@ jobs:
           echo "LW_API_KEY=${{ secrets.LW_API_KEY }}" >> env.list
           echo "LW_API_SECRET=${{ secrets.LW_API_SECRET }}" >> env.list
           echo "EXIT_FLAG=high=1" >> env.list 
-      
+          #echo "EXIT_FLAG=HIGH=1" >> env.list 
 
       - name: Set directory permissions
-        run: chmod -R 777 .
+        run: chmod -R 777 .terraform
 
       - name: Scan the repo for vulnerabilities in IaC
         run: |
@@ -33,4 +33,4 @@ jobs:
             -v "$(pwd):/app/src:rw" \
             -w /app/src \
             lacework/codesec:stable \
-            lacework iac scan --directory=. --exit high=1
+            lacework iac scan --directory=. 
