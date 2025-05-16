@@ -21,7 +21,7 @@ jobs:
           echo "LW_ACCOUNT=${{ secrets.LW_ACCOUNT }}" >> env.list
           echo "LW_API_KEY=${{ secrets.LW_API_KEY }}" >> env.list
           echo "LW_API_SECRET=${{ secrets.LW_API_SECRET }}" >> env.list
-          echo "EXIT_FLAG=low" >> env.list  # ✅ must be lowercase and match docs
+          echo "EXIT_FLAG=low=1" >> env.list  # ✅ must be lowercase and match docs
           cat env.list
 
       - name: Set directory permissions
