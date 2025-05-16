@@ -27,8 +27,7 @@ jobs:
           docker run --env-file env.list \
             -v "$(pwd):/src" \
             lacework/codesec:stable \
-            /bin/sh -c "mkdir -p /tmp/scan && \
-            find /src -name '*.tf' -exec cp --parents {} /tmp/scan \; && \
-            lacework iac scan --directory=/tmp/scan"
+            /bin/sh -c "mkdir -p /tmp/scan && find /src -name '*.tf' -exec cp --parents {} /tmp/scan \; && lacework iac scan --directory=/tmp/scan"
+           
 
 
