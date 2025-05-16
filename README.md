@@ -2,6 +2,8 @@
 
 ## 🧪 Demos & Use Cases
 
+### Dashboard overview and search
+
 ### ☁️ Demo 1: Cloud Integration Setup
 - Navigate to: `Settings → Cloud Accounts`
 - Click **Add Cloud Account**
