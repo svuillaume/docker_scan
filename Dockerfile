@@ -1,14 +1,24 @@
-FROM ubuntu:18.04
+# 🚨 EOL Python 2.7 image with known CVEs
+FROM python:2.7
 
-# Install outdated but still vulnerable system tools
-RUN apt-get update && \
-    apt-get install -y openssl passwd && \
-    echo "root:weakpassword123" | chpasswd
+# Set working directory
+WORKDIR /app
 
-# Copy entrypoint script
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+# Copy vulnerable app code
+COPY . /app
 
-CMD ["/entrypoint.sh"]
+# Install vulnerable Flask version
+RUN pip install Flask==0.10  # ⚠️ multiple known CVEs
+
+# Simulate secret exposure in environment
+ENV AWS_SECRET_ACCESS_KEY="AKIAFAKESECRETKEY"
+ENV DB_PASSWORD="root"
+
+# Expose port
+EXPOSE 5000
+
+# Run app as root (insecure)
+CMD ["python", "app.py"]
+
 
 
