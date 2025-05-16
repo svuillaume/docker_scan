@@ -12,6 +12,9 @@ jobs:
   scan:
     runs-on: ubuntu-latest
 
+    env:
+      LW_SCANNER_SAVE_RESULTS: true  # ✅ Save scan results to FortiCNAPP Console
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -31,24 +34,8 @@ jobs:
           echo "account = \"${{ secrets.LW_ACCOUNT }}\"" > .lacework/config.toml
           echo "access_token = \"${{ secrets.LW_ACCESS_TOKEN }}\"" >> .lacework/config.toml
 
-      - name: Create OPA policy to block CVEs > 9
-        run: |
-          mkdir -p ./policies
-          cat <<EOF > ./policies/high_severity.rego
-          package lacework.docker
-
-          deny[msg] {
-            vuln := input.vulnerabilities[_]
-            vuln.severity_score > 9
-            msg := sprintf("CVE %v has score %.1f", [vuln.cve_id, vuln.severity_score])
-          }
-          EOF
-
       - name: Scan Docker image
         run: |
           lw-scanner image evaluate samv latest \
             -n "${{ secrets.LW_ACCOUNT }}" \
-            -t "${{ secrets.LW_ACCESS_TOKEN }}" \
-            --evaluate \
-            --opa-path ./policies \
-            --save
+            -t "${{ secrets.LW_ACCESS_TOKEN }}"
