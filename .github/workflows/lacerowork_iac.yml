@@ -15,11 +15,6 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Copy only Terraform files to a temp folder
-        run: |
-          mkdir tf-only
-          find . -name '*.tf' -exec cp --parents {} tf-only \;
-
       - name: Create environment variables file
         run: |
           echo "LW_ACCOUNT=${{ secrets.LW_ACCOUNT }}" >> env.list
@@ -27,10 +22,13 @@ jobs:
           echo "LW_API_SECRET=${{ secrets.LW_API_SECRET }}" >> env.list
           echo "EXIT_FLAG=CRITICAL=1,HIGH=1" >> env.list
 
-      - name: Run Lacework IaC Scan (Terraform only)
+      - name: Run Lacework IaC Scan (Terraform only from internal /tmp)
         run: |
           docker run --env-file env.list \
-            -v "$(pwd)/tf-only:/tmp/scan" \
+            -v "$(pwd):/src" \
             lacework/codesec:stable \
-            lacework iac scan --directory /tmp/scan
-
+            /bin/sh -c "
+              mkdir -p /tmp/scan &&
+              find /src -name '*.tf' -exec cp --parents {} /tmp/scan \; &&
+              cd /tmp/scan &&
+              lacework iac scan --directory=."
