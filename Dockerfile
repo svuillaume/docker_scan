@@ -6,7 +6,7 @@ WORKDIR /app
 
 # Install sudo and bash
 RUN apt-get update && \
-    apt-get install -y sudo bash && \
+    apt-get install -y bash && \
     rm -rf /var/lib/apt/lists/*
 
 # Add a non-root user with sudo (optional)
