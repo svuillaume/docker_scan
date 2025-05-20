@@ -41,18 +41,17 @@ jobs:
             -t "${{ secrets.LW_ACCESS_TOKEN }}"
 
       - name: Create Markdown results file
-  run: |
-    echo "# Results" > results.md
-    echo "This is a test report." >> results.md
+        run: |
+          echo "# Results" > results.md
+          echo "This is a test report." >> results.md
 
-- name: Check if file exists
-  run: ls -l results.md
+      - name: Check if file exists
+        run: ls -l results.md
 
-- name: Upload Markdown results
-  uses: actions/upload-artifact@v4
-  with:
-    name: lacework-opa-results
-    path: results.md
-
+      - name: Upload Markdown results
+        uses: actions/upload-artifact@v4
+        with:
+          name: lacework-dockerfile-scan-results
+          path: results.md
 
      
