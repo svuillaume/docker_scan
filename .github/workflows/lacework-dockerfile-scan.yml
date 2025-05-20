@@ -39,6 +39,8 @@ jobs:
           lw-scanner image evaluate samv latest \
             -n "${{ secrets.LW_ACCOUNT }}" \
             -t "${{ secrets.LW_ACCESS_TOKEN }}"
+            --policy
+            --fail-on-violation-exit-code 1
 
       - name: Save report to Markdown
         run: |
