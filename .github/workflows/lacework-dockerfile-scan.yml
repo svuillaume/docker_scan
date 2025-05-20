@@ -36,7 +36,7 @@ jobs:
 
       - name: Scan Docker image
         run: |
-          lw-scanner image evaluate samv latest --policy --critical-violation-exit-code 1 \
+          lw-scanner image evaluate samv latest --policy --fail-on-violation-exit-code 1 \
             -n "${{ secrets.LW_ACCOUNT }}" \
             -t "${{ secrets.LW_ACCESS_TOKEN }}"
 
