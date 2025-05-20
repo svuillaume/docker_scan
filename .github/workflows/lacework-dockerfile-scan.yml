@@ -1,41 +1,55 @@
-name: Lacework Dockerfile CVE Scan
+name: Lacework Container Image Scan
 
 on:
-  push:
-    paths:
-      - 'Dockerfile'
   pull_request:
-    paths:
-      - 'Dockerfile'
+    branches: [main]
+  push:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io/my-org
+  IMAGE_NAME: my-app
+  GHA_SHA: ${{ github.sha }}
 
 jobs:
-  scan:
+  container-scan:
+    name: Scan container for vulnerabilities
     runs-on: ubuntu-latest
 
-    env:
-      LW_SCANNER_SAVE_RESULTS: true  # ✅ Save scan results to FortiCNAPP Console
-
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Install lw-scanner
-        run: |
-          curl -fL https://github.com/lacework/lacework-vulnerability-scanner/releases/latest/download/lw-scanner-linux-amd64 -o lw-scanner
-          chmod +x lw-scanner
-          sudo mv lw-scanner /usr/local/bin/lw-scanner
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Docker image
-        run: docker build -t samv:latest .
+        run: docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.GHA_SHA }} .
 
-      - name: Configure lw-scanner authentication
-        run: |
-          mkdir -p .lacework
-          echo "account = \"${{ secrets.LW_ACCOUNT }}\"" > .lacework/config.toml
-          echo "access_token = \"${{ secrets.LW_ACCESS_TOKEN }}\"" >> .lacework/config.toml
+      - uses: lacework/lw-scanner-action@v1.4.0
+        name: Scan container image for vulnerabilities using Lacework
+        with:
+          LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME }}
+          LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN }}
+          IMAGE_NAME: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          IMAGE_TAG: ${{ env.GHA_SHA }}
+          SAVE_RESULTS_IN_LACEWORK: true
+          RESULTS_IN_GITHUB_SUMMARY: true
 
-      - name: Scan Docker image
+      - name: Change formatting for PR
+        if: github.event_name == 'pull_request'
         run: |
-          lw-scanner image evaluate samv latest \
-            -n "${{ secrets.LW_ACCOUNT }}" \
-            -t "${{ secrets.LW_ACCESS_TOKEN }}"
+          echo "# Lacework Inline Scanner Result" > pr-results.md
+          echo "<pre>" >> pr-results.md
+          cat results.stdout >> pr-results.md
+          echo "</pre>" >> pr-results.md
+
+      - name: Comment PR with vulnerability scan results
+        if: github.event_name == 'pull_request'
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          filePath: pr-results.md
