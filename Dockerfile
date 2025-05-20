@@ -4,6 +4,14 @@ FROM python:2.7
 # Set working directory
 WORKDIR /app
 
+# Install sudo and bash
+RUN apt-get update && \
+    apt-get install -y sudo bash && \
+    rm -rf /var/lib/apt/lists/*
+
+# Add a non-root user with sudo (optional)
+RUN useradd -ms /bin/bash user && echo "user ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
 # Copy vulnerable app code
 COPY . /app
 
@@ -17,8 +25,7 @@ ENV DB_PASSWORD="root"
 # Expose port
 EXPOSE 5000
 
-# Run app as root (insecure)
-CMD ["python", "app.py"]
-
+# Default to Bash shell with sudo
+CMD ["bash"]
 
 
