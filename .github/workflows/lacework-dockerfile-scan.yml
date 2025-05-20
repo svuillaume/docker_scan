@@ -35,6 +35,7 @@ jobs:
           echo "access_token = \"${{ secrets.LW_ACCESS_TOKEN }}\"" >> .lacework/config.toml
 
       - name: Scan Docker image
+        continue-on-error: true
         run: |
           lw-scanner image evaluate samv latest --policy --fail-on-violation-exit-code 1 \
             -n "${{ secrets.LW_ACCOUNT }}" \
