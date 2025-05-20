@@ -1,0 +1,41 @@
+name: Lacework Dockerfile CVE Scan - docker image for inline
+
+on:
+  push:
+    paths:
+      - 'Dockerfile'
+  pull_request:
+    paths:
+      - 'Dockerfile'
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+
+    env:
+      LW_SCANNER_SAVE_RESULTS: true  
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Install lw-scanner
+        run: |
+          curl -fL https://github.com/lacework/lacework-vulnerability-scanner/releases/latest/download/lw-scanner-linux-amd64 -o lw-scanner
+          chmod +x lw-scanner
+          sudo mv lw-scanner /usr/local/bin/lw-scanner
+
+      - name: Build Docker image
+        run: docker build -t samv:latest .
+
+      - name: Configure lw-scanner authentication
+        run: |
+          mkdir -p .lacework
+          echo "account = \"${{ secrets.LW_ACCOUNT }}\"" > .lacework/config.toml
+          echo "access_token = \"${{ secrets.LW_ACCESS_TOKEN }}\"" >> .lacework/config.toml
+
+      - name: Scan Docker image
+        run: |
+          lw-scanner image evaluate samv latest \
+            -n "${{ secrets.LW_ACCOUNT }}" \
+            -t "${{ secrets.LW_ACCESS_TOKEN }}"
