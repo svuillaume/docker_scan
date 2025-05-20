@@ -39,3 +39,25 @@ jobs:
           lw-scanner image evaluate samv latest \
             -n "${{ secrets.LW_ACCOUNT }}" \
             -t "${{ secrets.LW_ACCESS_TOKEN }}"
+
+      - name: Save report to Markdown
+        run: |
+          echo "# Lacework OPA Evaluation Results" > results.md
+          echo "\`\`\`json" >> results.md
+          cat results.json >> results.md
+          echo "\`\`\`" >> results.md
+
+      - name: Upload Markdown results
+        uses: actions/upload-artifact@v4
+        with:
+          name: lacework-opa-results
+          path: results.md
+
+      - name: Fail if policy failed
+        run: |
+          if grep -q '"decision": *"fail"' results.json; then
+            echo "Policy failed. Failing build."
+            exit 1
+          else
+            echo "All policies passed."
+          fi
