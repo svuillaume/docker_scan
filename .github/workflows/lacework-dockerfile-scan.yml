@@ -42,6 +42,7 @@ jobs:
 
       - name: Upload Markdown results
         uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
           name: lacework-opa-results
           path: results.md
