@@ -1,4 +1,4 @@
-# 🚨 EOL Python 2.7 image with known CVEs
+# Python 2.7 image with known CVEs
 FROM python:2.7
 
 # Set working directory
@@ -20,7 +20,7 @@ RUN pip install Flask==0.10  # ⚠️ multiple known CVEs
 
 # Simulate secret exposure in environment
 ENV AWS_SECRET_ACCESS_KEY="AKIAFAKESECRETKE123456"
-ENV DB_PASSWORD="root"
+ENV DB_PASSWORD="admin"
 
 # Expose port
 EXPOSE 5556
