@@ -23,7 +23,7 @@ ENV AWS_SECRET_ACCESS_KEY="AKIAFAKESECRETKE123456"
 ENV DB_PASSWORD="root"
 
 # Expose port
-EXPOSE 5555
+EXPOSE 5556
 
 # Default to Bash shell with sudo
 CMD ["bash"]
