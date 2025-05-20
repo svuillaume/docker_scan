@@ -39,12 +39,14 @@ jobs:
         run: |
           lw-scanner image evaluate samv latest --policy --fail-on-violation-exit-code 1 \
             -n "${{ secrets.LW_ACCOUNT }}" \
-            -t "${{ secrets.LW_ACCESS_TOKEN }}"
+            -t "${{ secrets.LW_ACCESS_TOKEN }}" > results.stdout
 
       - name: Create Markdown results file
         run: |
-          echo "# Results" > results.md
-          echo "This is a test report." >> results.md
+          echo "# Lacework Scan Results" > results.md
+          echo "\`\`\`" >> results.md
+          cat results.stdout >> results.md
+          echo "\`\`\`" >> results.md
 
       - name: Check if file exists
         run: ls -l results.md
@@ -55,4 +57,3 @@ jobs:
           name: lacework-dockerfile-scan-results
           path: results.md
 
-     
