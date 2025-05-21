@@ -36,10 +36,6 @@ jobs:
 
       - name: Run lw-scanner image evaluate
         run: |
-          lw-scanner config auth \
-            --account "${{ secrets.LW_ACCOUNT }}" \
-            --access-token "${{ secrets.LW_ACCESS_TOKEN }}"
-
           lw-scanner image evaluate my-image:latest \
             --opa-path ./policies \
             --output json > results.json
