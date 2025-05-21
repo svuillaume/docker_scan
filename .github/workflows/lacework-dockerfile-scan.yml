@@ -34,16 +34,14 @@ jobs:
           echo "account = \"${{ secrets.LW_ACCOUNT }}\"" > .lacework/config.toml
           echo "access_token = \"${{ secrets.LW_ACCESS_TOKEN }}\"" >> .lacework/config.toml
 
-      - name: Scan Docker image
+      - name: Run lw-scanner image evaluate
         run: |
-          lw-scanner image evaluate samv latest --policy --critical-violation-exit-code 1 \
-            -n "${{ secrets.LW_ACCOUNT }}" \
-            -t "${{ secrets.LW_ACCESS_TOKEN }}"
+          lw-scanner config auth \
+          --account "${{ secrets.LW_ACCOUNT }}" \
+          --access-token "${{ secrets.LW_ACCESS_TOKEN }}"
 
-      - name: Upload Markdown results
-        uses: actions/upload-artifact@v4
-        with:
-          name: lacework-opa-results
-          path: results.md
+         lw-scanner image evaluate my-image:latest \
+         --opa-path ./policies \
+         --output json > results.json
 
-     
+
