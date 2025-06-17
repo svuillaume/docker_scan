@@ -33,15 +33,7 @@ jobs:
           mkdir -p .terraform
           chmod -R 777 .terraform
 
-      - name: Scan the repo for vulnerabilities in IaC
-  run: |
-    docker run --env-file env.list \
-      -v "$(pwd):/app/src:rw" \
-      -w /app/src \
-      lacework/codesec:stable \
-      lacework iac scan --directory=. > iac-scan.txt
-
-    - name: Run Lacework IaC scan and check severity
+      - name: Run Lacework IaC scan and check severity
         run: |
           docker run --env-file env.list \
             -v "$(pwd):/app/src:rw" \
@@ -56,12 +48,6 @@ jobs:
             exit 1
           else
             echo "No Medium, High, or Critical severity issues found."
-          fi
-
-
-
-
-
 
 
 
