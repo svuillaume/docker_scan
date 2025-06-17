@@ -5,7 +5,7 @@ resource "aws_instance" "bad_ec2" {
 
   user_data = <<-EOF
               #!/bin/bash
-              echo "ROOT_PASSWORD=SuperSecret123" > /var/www/html/root-password.txt
+              echo "ROOT_PASSWORD=rootSecret123" > /var/www/html/root-password.txt
               yum install -y httpd
               systemctl start httpd
               systemctl enable httpd
