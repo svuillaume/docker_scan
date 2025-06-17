@@ -1,13 +1,13 @@
 from flask import Flask, request, make_response
 import os
+import html
 
 app = Flask(__name__)
 
 @app.route("/")
 def index():
     resp = make_response("Welcome to the insecure app!")
-    # Set a cookie 'foobar' with SameSite=None and Secure=False
-    # ⚠️ Most browsers will ignore this because SameSite=None requires Secure
+    # Insecure cookie: SameSite=None without Secure
     resp.set_cookie(
         "foobar",
         "value123",
@@ -18,16 +18,30 @@ def index():
 
 @app.route("/secret")
 def secret():
-    # Exposes environment variable (insecure)
+    # Environment variable leak
     return "AWS_SECRET_ACCESS_KEY: " + os.getenv("AWS_SECRET_ACCESS_KEY", "not_set")
 
 @app.route("/cmd")
 def run_command():
-    # ⚠️ Extremely insecure: allows remote code execution
+    # Remote code execution
     cmd = request.args.get("exec")
     if cmd:
         return os.popen(cmd).read()
     return "No command provided."
+
+@app.route("/greet")
+def greet():
+    # Reflected XSS
+    name = request.args.get("name", "stranger")
+    return f"<h1>Hello, {name}!</h1>"
+
+@app.route("/user")
+def user_lookup():
+    # Simulated SQL injection (no DB, but vulnerable logic)
+    user_id = request.args.get("id", "")
+    if " OR " in user_id.upper() or "=" in user_id:
+        return "Access granted to all users! (simulated SQLi)"
+    return f"Looking up user ID: {html.escape(user_id)}"
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000)
