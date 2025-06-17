@@ -1,7 +1,7 @@
 <?php
-// 🚨 Insecure: Hardcoded secrets in source code
+//Insecure: Hardcoded secrets in source code
 $password = "P@ssw0rd123!";
-$api_secret = "sk_test_51H8SecretKeyInPlainText";
+$api_secret = "demo_51H8SecretKeyInPlainText";
 
 // Simulate usage
 echo "<h1>Welcome to Insecure PHP App</h1>";
