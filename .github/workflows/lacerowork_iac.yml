@@ -48,7 +48,7 @@ jobs:
             exit 1
           else
             echo "No Medium, High, or Critical severity issues found."
-
+          fi
 
 
 
