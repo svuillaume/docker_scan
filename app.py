@@ -1,8 +1,12 @@
 from flask import Flask, request, make_response
+from werkzeug.middleware.proxy_fix import ProxyFix
 import os
 import html
 
 app = Flask(__name__)
+
+# Apply ProxyFix middleware to trust 1 level of proxy
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1)
 
 @app.route("/")
 def index():
@@ -42,6 +46,11 @@ def user_lookup():
     if " OR " in user_id.upper() or "=" in user_id:
         return "Access granted to all users! (simulated SQLi)"
     return f"Looking up user ID: {html.escape(user_id)}"
+
+@app.route("/client-ip")
+def client_ip():
+    # Returns the client IP address, respecting X-Forwarded-For
+    return f"Client IP: {request.remote_addr}"
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000)
