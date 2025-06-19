@@ -12,7 +12,7 @@ data "aws_vpc" "default" {
 }
 
 resource "aws_security_group" "samv_sg" {
-  name        = "samv-demo-only-sg"
+  name        = "samv-demo-sg"
   description = "Allow all traffic"
   vpc_id      = data.aws_vpc.default.id
 
