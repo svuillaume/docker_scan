@@ -1,16 +1,3 @@
-name: lacework-iac-example
-
-on:
-  push:
-    branches: ["main"]
-    paths:
-      - '**.tf'
-  pull_request:
-    branches: ["main"]
-    paths:
-      - '**.tf'
-  workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-24.04
@@ -18,6 +5,11 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.7
 
       - name: Create environment variables file
         run: |
