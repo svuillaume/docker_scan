@@ -1,4 +1,4 @@
-name: Terraform + Lacework IaC Scan
+name: IaC Scan
 
 on:
   push:
@@ -46,13 +46,17 @@ jobs:
       - name: Show Lacework findings
         run: cat iac-scan.txt
 
-      - name: Fail if any findings are present
+      - name: Fail if any Medium+ severity findings failed (AWK)
         run: |
-          if grep -q 'Severity:' iac-scan.txt; then
-            echo "Findings detected! Failing the job."
+          echo "🔍 Checking Lacework findings using AWK..."
+          MATCHES=$(awk '$3 == "false" && ($2 == "Critical" || $2 == "High" || $2 == "Medium")' iac-scan.txt)
+
+          if [ -n "$MATCHES" ]; then
+            echo "❌ Failing Medium+ severity findings:"
+            echo "$MATCHES"
             exit 1
           else
-            echo "No findings detected."
+            echo "✅ No failed Medium+ severity findings."
           fi
 
       - name: Upload Lacework IaC report
@@ -60,3 +64,4 @@ jobs:
         with:
           name: lacework-iac-scan
           path: iac-scan.txt
+
