@@ -35,4 +35,4 @@ jobs:
         run: terraform init
 
       - name: Run Lacework IaC scan
-        run: docker run --rm --env-file env.list -v "$(pwd):/app/src" -w /app/src lacework/codesec:stable lacework iac scan --directory=.
+        run: docker run --rm --env-file env.list -v "$(pwd):/app/src" -w /app/src lacework/codesec:v1.0.44 lacework iac scan --directory=.
