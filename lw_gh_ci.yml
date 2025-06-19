@@ -1,0 +1,66 @@
+name: IaC Scan
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - '**.tf'
+  pull_request:
+    branches: ["main"]
+    paths:
+      - '**.tf'
+  workflow_dispatch:
+
+jobs:
+  terraform-lacework-iac:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.7
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Create environment variable file
+        run: |
+          env | grep "GITHUB_\|LW_\|CI_" > env.list
+          echo "LW_ACCOUNT=${{ secrets.LW_ACCOUNT }}" >> env.list
+          echo "LW_API_KEY=${{ secrets.LW_API_KEY }}" >> env.list
+          echo "LW_API_SECRET=${{ secrets.LW_API_SECRET }}" >> env.list
+          echo "EXIT_FLAG=low=1" >> env.list  # Fail on ANY severity
+
+      - name: Run Lacework IaC scan
+        run: |
+          docker run --rm --env-file env.list \
+            -v "$(pwd):/app/src:rw" \
+            -w /app/src \
+            lacework/codesec:stable \
+            lacework iac scan --directory=. > iac-scan.txt
+
+      - name: Show Lacework findings
+        run: cat iac-scan.txt
+
+      - name: Fail if any Medium+ severity findings failed (AWK)
+        run: |
+          echo "🔍 Checking Lacework findings using AWK..."
+          MATCHES=$(awk '$3 == "false" && ($2 == "Critical" || $2 == "High" || $2 == "Medium")' iac-scan.txt)
+
+          if [ -n "$MATCHES" ]; then
+            echo "Failing Medium+ severity findings:"
+            echo "$MATCHES"
+            exit 1
+          else
+            echo "No failed Medium+ severity findings."
+          fi
+
+      - name: Upload Lacework IaC report
+        uses: actions/upload-artifact@v4
+        with:
+          name: lacework-iac-scan
+          path: iac-scan.txt
