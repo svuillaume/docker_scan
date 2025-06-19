@@ -1,4 +1,4 @@
-name: Terraform + Lacework Scan
+name: Terraform + Lacework IaC Scan
 
 on:
   push:
@@ -24,7 +24,7 @@ jobs:
         with:
           terraform_version: 1.5.7
 
-      - name: Terraform Init (Writable)
+      - name: Terraform Init
         run: terraform init
 
       - name: Create environment variable file
@@ -33,9 +33,9 @@ jobs:
           echo "LW_ACCOUNT=${{ secrets.LW_ACCOUNT }}" >> env.list
           echo "LW_API_KEY=${{ secrets.LW_API_KEY }}" >> env.list
           echo "LW_API_SECRET=${{ secrets.LW_API_SECRET }}" >> env.list
-          echo "EXIT_FLAG=high=1" >> env.list
+          echo "EXIT_FLAG=low=1" >> env.list  # Fail on ANY severity
 
-      - name: Run Lacework IaC scan and check severity
+      - name: Run Lacework IaC scan
         run: |
           docker run --rm --env-file env.list \
             -v "$(pwd):/app/src:rw" \
@@ -43,11 +43,20 @@ jobs:
             lacework/codesec:stable \
             lacework iac scan --directory=. > iac-scan.txt
 
-          echo "Scan complete. Checking severity..."
-          if grep -qE 'Severity:\s+(Medium|High|Critical)' iac-scan.txt; then
-            echo "Vulnerabilities of Medium or higher severity found:"
-            cat iac-scan.txt
+      - name: Show Lacework findings
+        run: cat iac-scan.txt
+
+      - name: Fail if any findings are present
+        run: |
+          if grep -q 'Severity:' iac-scan.txt; then
+            echo "Findings detected! Failing the job."
             exit 1
           else
-            echo "No Medium, High, or Critical severity issues found."
+            echo "No findings detected."
           fi
+
+      - name: Upload Lacework IaC report
+        uses: actions/upload-artifact@v3
+        with:
+          name: lacework-iac-scan
+          path: iac-scan.txt
