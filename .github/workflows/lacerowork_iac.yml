@@ -1,9 +1,22 @@
+name: Terraform + Lacework Scan
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - '**.tf'
+  pull_request:
+    branches: ["main"]
+    paths:
+      - '**.tf'
+  workflow_dispatch:
+
 jobs:
-  build:
+  terraform-lacework-iac:
     runs-on: ubuntu-24.04
 
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Setup Terraform
@@ -11,7 +24,10 @@ jobs:
         with:
           terraform_version: 1.5.7
 
-      - name: Create environment variables file
+      - name: Terraform Init (Read-Only)
+        run: terraform init -lockfile=readonly
+
+      - name: Create environment variable file
         run: |
           env | grep "GITHUB_\|LW_\|CI_" > env.list
           echo "LW_ACCOUNT=${{ secrets.LW_ACCOUNT }}" >> env.list
@@ -19,19 +35,16 @@ jobs:
           echo "LW_API_SECRET=${{ secrets.LW_API_SECRET }}" >> env.list
           echo "EXIT_FLAG=high=1" >> env.list
 
-      - name: Terraform Init (Read-Only)
-        run: terraform init -lockfile=readonly
-
       - name: Run Lacework IaC scan and check severity
         run: |
-          docker run --env-file env.list \
+          docker run --rm --env-file env.list \
             -v "$(pwd):/app/src:rw" \
             -w /app/src \
             lacework/codesec:stable \
             lacework iac scan --directory=. > iac-scan.txt
 
           echo "Scan complete. Checking severity..."
-          if grep -qE 'Severity:\s+(High|Critical|Medium)' iac-scan.txt; then
+          if grep -qE 'Severity:\s+(Medium|High|Critical)' iac-scan.txt; then
             echo "Vulnerabilities of Medium or higher severity found:"
             cat iac-scan.txt
             exit 1
