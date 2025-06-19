@@ -25,13 +25,10 @@ jobs:
           echo "LW_ACCOUNT=${{ secrets.LW_ACCOUNT }}" >> env.list
           echo "LW_API_KEY=${{ secrets.LW_API_KEY }}" >> env.list
           echo "LW_API_SECRET=${{ secrets.LW_API_SECRET }}" >> env.list
-          echo "EXIT_FLAG=high=1" >> env.list 
-          #echo "EXIT_FLAG=HIGH=1" >> env.list 
+          echo "EXIT_FLAG=high=1" >> env.list
 
-      - name: Set directory permissions
-        run: |
-          mkdir -p .terraform
-          chmod -R 777 .terraform
+      - name: Terraform Init (Read-Only)
+        run: terraform init -lockfile=readonly
 
       - name: Run Lacework IaC scan and check severity
         run: |
@@ -49,8 +46,3 @@ jobs:
           else
             echo "No Medium, High, or Critical severity issues found."
           fi
-
-
-
-
-
