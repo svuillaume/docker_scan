@@ -3,7 +3,7 @@ provider "aws" {
 }
 
 resource "aws_key_pair" "samv_demo_key" {
-  key_name   = "samv-demo-only-key"
+  key_name   = "samv-demo-only"
   public_key = file("~/.ssh/id_rsa.pub")
 }
 
