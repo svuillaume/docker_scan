@@ -13,8 +13,8 @@ def index():
     resp = make_response("Welcome to the insecure app!")
     # Insecure cookie: SameSite=None without Secure
     resp.set_cookie(
-        "foobar",
-        "value123",
+        "foo",
+        "secret123",
         samesite='None',
         secure=False
     )
