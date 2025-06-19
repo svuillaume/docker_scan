@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 jobs:
-build:
+  build:
     runs-on: ubuntu-24.04
 
     steps:
@@ -25,10 +25,7 @@ build:
           echo "LW_ACCOUNT=${{ secrets.LW_ACCOUNT }}" >> env.list
           echo "LW_API_KEY=${{ secrets.LW_API_KEY }}" >> env.list
           echo "LW_API_SECRET=${{ secrets.LW_API_SECRET }}" >> env.list
-          echo "EXIT_FLAG=HIGH=1" >> env.list  # Fail on ANY severity
+          echo "EXIT_FLAG=HIGH=1" >> env.list  # ⚠️ Note: EXIT_FLAG is not used by Lacework CLI
 
       - name: Run Lacework IaC scan
-        run: |
-          docker run --env-file env.list -v "$(pwd):/app/src" lacework/codesec:stable lacework iac scan --directory=. 
-
-
+        run: docker run --rm --env-file env.list -v "$(pwd):/app/src" -w /app/src lacework/codesec:stable lacework iac scan --directory=.
