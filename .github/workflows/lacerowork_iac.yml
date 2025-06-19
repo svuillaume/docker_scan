@@ -24,8 +24,8 @@ jobs:
         with:
           terraform_version: 1.5.7
 
-      - name: Terraform Init (Read-Only)
-        run: terraform init -lockfile=readonly
+      - name: Terraform Init (Writable)
+        run: terraform init
 
       - name: Create environment variable file
         run: |
