@@ -2,11 +2,9 @@ name: Lacework Container Image Scan
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
   pull_request:
-    branches:
-      - main
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
@@ -21,20 +19,16 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t myapp:latest .
+          docker build -t myapp:v1.0.0 .
 
-      - name: Scan Docker image with Lacework
-        env:
-          LW_ACCOUNT: ${{ secrets.LW_ACCOUNT }}
-          LW_ACCESS_TOKEN: ${{ secrets.LW_ACCOUNT }}
-  
-        run: |
-          docker run --rm \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            -e LW_ACCOUNT=$LW_ACCOUNT \
-            -e LW_ACCESS_TOKEN=$LW_ACCESS_TOKEN \
-            lacework/lacework-inline-scanner:latest \
-            image scan myapp:latest
+      - name: Scan container image for vulnerabilities using Lacework
+        uses: lacework/lw-scanner-action@v1.4.0
+        with:
+          LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME }}
+          LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN }}
+          IMAGE_NAME: myapp
+          IMAGE_TAG: v1.0.0
+
 
 
          
