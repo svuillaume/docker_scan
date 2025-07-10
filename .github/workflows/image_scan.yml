@@ -7,6 +7,11 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
 
+env:
+  IMAGE_NAME: myapp
+  IMAGE_TAG: v1.0.0
+  FULL_IMAGE_NAME: myapp:v1.0.0
+
 jobs:
   scan-container:
     runs-on: ubuntu-latest
@@ -19,16 +24,27 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t myapp:v1.0.0 .
+          docker build -t ${{ env.FULL_IMAGE_NAME }} .
 
       - name: Scan container image for vulnerabilities using Lacework
         uses: lacework/lw-scanner-action@v1.4.0
         with:
           LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME }}
           LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN }}
-          IMAGE_NAME: myapp
-          IMAGE_TAG: v1.0.0
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          IMAGE_TAG: ${{ env.IMAGE_TAG }}
+          SAVE_RESULTS_IN_LACEWORK: true
+          RESULTS_IN_GITHUB_SUMMARY: true
 
+      - name: Format Lacework results for PR comment
+        run: |
+          echo "# Lacework Scanner Results" > pr-results.md
+          echo "<pre>" >> pr-results.md
+          cat results.stdout >> pr-results.md || echo "No output captured."
+          echo "</pre>" >> pr-results.md
 
-
-         
+      - name: Comment on Pull Request
+        if: github.event_name == 'pull_request'
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          filePath: pr-results.md
