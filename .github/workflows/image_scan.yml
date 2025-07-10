@@ -35,13 +35,13 @@ jobs:
           IMAGE_TAG: ${{ env.IMAGE_TAG }}
           SAVE_RESULTS_IN_LACEWORK: true
           RESULTS_IN_GITHUB_SUMMARY: true
+         
 
       - name: Format Lacework results for PR comment
         run: |
           echo "# Lacework Scanner Results" > pr-results.md
-          echo "<pre>" >> pr-results.md
-          cat results.stdout >> pr-results.md || echo "No output captured."
-          echo "</pre>" >> pr-results.md
+          echo "✅ Scan completed using Lacework." >> pr-results.md
+          echo "📊 See results in the **GitHub Actions Summary tab** or in the **Lacework Console**." >> pr-results.md
 
       - name: Comment on Pull Request
         if: github.event_name == 'pull_request'
