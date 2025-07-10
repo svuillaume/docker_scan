@@ -36,7 +36,7 @@ jobs:
             -e LW_ACCOUNT=$LW_ACCOUNT \
             -e LW_API_TOKEN=$LW_API_TOKEN \
             lacework/lacework-inline-scanner:latest \
-            image scan ${{ env.FULL_IMAGE_NAME }}
+            image scan ${{ env.IMAGE_NAME }} ${{ env.IMAGE_TAG }}
 
       - name: Evaluate public image ubuntu:latest
         run: |
