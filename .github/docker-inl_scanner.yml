@@ -1,41 +1,38 @@
-name: Lacework Dockerfile CVE Scan - docker image for inline
+name: Lacework Container Image Scan
 
 on:
   push:
-    paths:
-      - 'Dockerfile'
+    branches:
+      - main
   pull_request:
-    paths:
-      - 'Dockerfile'
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
-  scan:
+  scan-container:
     runs-on: ubuntu-latest
-
-    env:
-      LW_SCANNER_SAVE_RESULTS: true  
-
     steps:
-      - name: Checkout repo
+      - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Install lw-scanner
-        run: |
-          curl -fL https://github.com/lacework/lacework-vulnerability-scanner/releases/latest/download/lw-scanner-linux-amd64 -o lw-scanner
-          chmod +x lw-scanner
-          sudo mv lw-scanner /usr/local/bin/lw-scanner
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
       - name: Build Docker image
-        run: docker build -t samv:latest .
-
-      - name: Configure lw-scanner authentication
         run: |
-          mkdir -p .lacework
-          echo "account = \"${{ secrets.LW_ACCOUNT }}\"" > .lacework/config.toml
-          echo "access_token = \"${{ secrets.LW_ACCESS_TOKEN }}\"" >> .lacework/config.toml
+          docker build -t myapp:latest .
 
-      - name: Scan Docker image
+      - name: Scan Docker image with Lacework
+        env:
+          LW_ACCOUNT: ${{ secrets.LW_ACCOUNT }}
+          LW_API_KEY: ${{ secrets.LW_API_KEY }}
+          LW_API_SECRET: ${{ secrets.LW_API_SECRET }}
         run: |
-          lw-scanner image evaluate samv latest \
-            -n "${{ secrets.LW_ACCOUNT }}" \
-            -t "${{ secrets.LW_ACCESS_TOKEN }}"
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -e LW_ACCOUNT=$LW_ACCOUNT \
+            -e LW_API_KEY=$LW_API_KEY \
+            -e LW_API_SECRET=$LW_API_SECRET \
+            lacework/lw-scanner \
+            image scan myapp:latest
