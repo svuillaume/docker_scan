@@ -33,7 +33,7 @@ jobs:
             -v /var/run/docker.sock:/var/run/docker.sock \
             -e LW_ACCOUNT=$LW_ACCOUNT \
             -e LW_ACCESS_TOKEN=$LW_ACCESS_TOKEN \
-            lacework/lw-scanner \
+            lacework/lacework-inline-scanner:latest \
             image scan myapp:latest
 
 
