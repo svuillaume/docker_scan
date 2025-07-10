@@ -27,7 +27,7 @@ jobs:
           docker build -t ${{ env.FULL_IMAGE_NAME }} .
 
       - name: Scan container image for vulnerabilities using Lacework
-        uses: lacework/lw-scanner-action@v1.4.0
+        uses: lacework/lw-scanner-action@v1.4.5
         with:
           LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME }}
           LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN }}
