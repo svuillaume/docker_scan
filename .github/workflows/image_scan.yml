@@ -24,31 +24,24 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t myapp:v1.0.0 .
+          docker build -t ${{ env.FULL_IMAGE_NAME }} .
 
       - name: Run vulnerability scan with Lacework inline scanner
         env:
-          LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME }}
-          LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN }}
+          LW_ACCOUNT: ${{ secrets.LW_ACCOUNT_NAME }}
+          LW_API_TOKEN: ${{ secrets.LW_ACCESS_TOKEN }}
         run: |
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            -e LW_ACCOUNT_NAME=$LW_ACCOUNT_NAME \
-            -e LW_ACCESS_TOKEN=$LW_ACCESS_TOKEN \
+            -e LW_ACCOUNT=$LW_ACCOUNT \
+            -e LW_API_TOKEN=$LW_API_TOKEN \
             lacework/lacework-inline-scanner:latest \
-            image scan myapp v1.0.0
-
-      - name: Evaluate public image ubuntu:latest
-        run: |
-          docker run --rm \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            lacework/lacework-inline-scanner:latest \
-            image evaluate ubuntu:latest
+            image scan ${{ env.IMAGE_NAME }} ${{ env.IMAGE_TAG }} --no-pull
 
       - name: Format Lacework results for PR comment
         run: |
           echo "# Lacework Scanner Results" > pr-results.md
-          echo "✅ Scans completed using Lacework Inline Scanner." >> pr-results.md
+          echo "✅ Scan completed using Lacework Inline Scanner." >> pr-results.md
           echo "📊 See details in GitHub Actions logs and the Lacework Console." >> pr-results.md
 
       - name: Comment on Pull Request
