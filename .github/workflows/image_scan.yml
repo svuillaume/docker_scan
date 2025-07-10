@@ -35,6 +35,7 @@ jobs:
           IMAGE_TAG: ${{ env.IMAGE_TAG }}
           SAVE_RESULTS_IN_LACEWORK: true
           RESULTS_IN_GITHUB_SUMMARY: true
+          DEBUGGING: true 
          
 
       - name: Format Lacework results for PR comment
