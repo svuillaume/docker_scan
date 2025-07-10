@@ -36,16 +36,6 @@ jobs:
             -e LW_ACCOUNT=$LW_ACCOUNT \
             -e LW_API_TOKEN=$LW_API_TOKEN \
             lacework/lacework-inline-scanner:latest \
-            image scan ${{ env.IMAGE_NAME }} ${{ env.IMAGE_TAG }} --no-pull
+            image scan ${{ env.IMAGE_NAME }} ${{ env.IMAGE_TAG }} 
 
-      - name: Format Lacework results for PR comment
-        run: |
-          echo "# Lacework Scanner Results" > pr-results.md
-          echo "✅ Scan completed using Lacework Inline Scanner." >> pr-results.md
-          echo "📊 See details in GitHub Actions logs and the Lacework Console." >> pr-results.md
-
-      - name: Comment on Pull Request
-        if: github.event_name == 'pull_request'
-        uses: thollander/actions-comment-pull-request@v2
-        with:
-          filePath: pr-results.md
+     
