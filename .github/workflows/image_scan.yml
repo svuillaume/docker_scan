@@ -24,7 +24,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ env.FULL_IMAGE_NAME }} .
+          docker build -t myapp:v1.0.0 .
 
       - name: Run vulnerability scan with Lacework inline scanner
         env:
@@ -36,7 +36,7 @@ jobs:
             -e LW_ACCOUNT=$LW_ACCOUNT \
             -e LW_API_TOKEN=$LW_API_TOKEN \
             lacework/lacework-inline-scanner:latest \
-            image scan ${{ env.IMAGE_NAME }} ${{ env.IMAGE_TAG }}
+            image scan myapp v1.0.0
 
       - name: Evaluate public image ubuntu:latest
         run: |
