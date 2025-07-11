@@ -28,14 +28,15 @@ jobs:
 
       - name: Run vulnerability scan with Lacework inline scanner
         env:
-          LW_ACCOUNT: ${{ secrets.LW_ACCOUNT_NAME }}
+          LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME }}
           LW_API_TOKEN: ${{ secrets.LW_ACCESS_TOKEN }}
         run: |
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            -e LW_ACCOUNT=$LW_ACCOUNT \
+            -e LW_ACCOUNT_NAME=$LW_ACCOUNT_NAME \
             -e LW_API_TOKEN=$LW_API_TOKEN \
             lacework/lacework-inline-scanner:latest \
             image evaluate ${{ env.IMAGE_NAME }} ${{ env.IMAGE_TAG }} 
+
 
      
