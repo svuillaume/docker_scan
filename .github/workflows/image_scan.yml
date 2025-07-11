@@ -33,3 +33,5 @@ jobs:
           LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN }}
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
           IMAGE_TAG: ${{ env.IMAGE_TAG }}
+        env:
+          DEBUG: "true"
