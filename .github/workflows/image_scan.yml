@@ -8,8 +8,8 @@ on:
   workflow_dispatch:
 
 env:
-  IMAGE_NAME: samv
-  IMAGE_TAG: v1.0.0
+  IMAGE_NAME: samv_demo
+  IMAGE_TAG: v1.0.1
 
 jobs:
   scan-container:
