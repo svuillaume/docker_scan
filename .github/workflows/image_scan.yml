@@ -8,9 +8,8 @@ on:
   workflow_dispatch:
 
 env:
-  IMAGE_NAME: myapp
+  IMAGE_NAME: samv
   IMAGE_TAG: v1.0.0
-  FULL_IMAGE_NAME: myapp:v1.0.0
 
 jobs:
   scan-container:
@@ -24,7 +23,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ env.FULL_IMAGE_NAME }} .
+          docker build -t ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} . .
 
       - name: Scan container images for vulnerabilities using Lacework
         uses: lacework/lw-scanner-action@v1.4.0
