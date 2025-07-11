@@ -35,3 +35,4 @@ jobs:
           IMAGE_TAG: ${{ env.IMAGE_TAG }}
         env:
           DEBUG: "true"
+          LW_SCANNER_SAVE_RESULTS: "true"
