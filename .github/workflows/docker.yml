@@ -56,5 +56,3 @@ jobs:
             lacework/lacework-inline-scanner:latest \
             image evaluate ${{ env.IMAGE_NAME }} ${{ env.IMAGE_TAG }} --save
 
-            lacework/lacework-inline-scanner:latest \
-            image evaluate ${{ env.IMAGE_NAME }} ${{ env.IMAGE_TAG }} --save
