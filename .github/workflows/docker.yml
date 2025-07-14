@@ -55,4 +55,3 @@ jobs:
             -e DEBUG=$DEBUG \
             lacework/lacework-inline-scanner:latest \
             image evaluate ${{ env.IMAGE_NAME }} ${{ env.IMAGE_TAG }} --save
-
