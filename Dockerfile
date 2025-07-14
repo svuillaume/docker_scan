@@ -14,14 +14,14 @@ RUN apt-get update && \
 RUN git clone https://github.com/digininja/DVWA.git /var/www/html
 
 # Create insecure secret and SSH key files
-RUN echo "AWS_SECRET_KEY=AKIAFAKESECRET123456789" > /root/.aws/credentials && \
-    echo "p@ssw0rd" > /root/.env && \
-    mkdir -p /root/.ssh && \
-    echo '-----BEGIN RSA PRIVATE KEY-----
-MIIEowIBAAKCAQEAzVxH+phgFakGZB3VlGm5uyM1zOpHTRmAeQQGzp+hzHb3KYLF
-fX+Hj27jVRea7OSDpjXq3M1vZTjZ2B5JPkFMgKeKoTjTg9eWa6kR93jOztZzU5JHg
-x...
------END RSA PRIVATE KEY-----' > /root/.ssh/id_rsa && \
+RUN mkdir -p /root/.ssh && \
+    printf '%s\n' \
+"-----BEGIN RSA PRIVATE KEY-----" \
+"MIIEpAIBAAKCAQEA1KjN6w7RQnZfRk7IVtkbMoP5lA0uEJ2JfNjHdqnn4n+9Yrlw" \
+"x3N1D4v8v9gA1VzAjkzY+yO4KMBukVklNv6E5z0QKBgQDLvjOZ6vhMx1x7fEp0u3Q" \
+"wIDAQABAoIBAQCq9EvTxY4vZx+JZ1B3Et+PvPmlqKdj0Bt9UJ2OYo1VZrhT" \
+"-----END RSA PRIVATE KEY-----" \
+> /root/.ssh/id_rsa && \
     chmod 600 /root/.ssh/id_rsa
 
 # Make secrets world-readable to simulate worst-case scenario
