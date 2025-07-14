@@ -1,6 +1,11 @@
 FROM debian:stretch
 
-# Install system dependencies
+# Replace expired APT sources and disable validation
+RUN sed -i 's|http://deb.debian.org|http://archive.debian.org|g' /etc/apt/sources.list && \
+    sed -i 's|security.debian.org|http://archive.debian.org|g' /etc/apt/sources.list && \
+    echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid-until
+
+# Install dependencies
 RUN apt-get update && apt-get install -y \
     apache2 \
     php \
@@ -10,23 +15,23 @@ RUN apt-get update && apt-get install -y \
     git \
     unzip \
     wget \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+    curl && \
+    rm -rf /var/lib/apt/lists/*
 
 # Clone DVWA
 RUN git clone https://github.com/digininja/DVWA.git /var/www/html
 
-# Fix permissions
-RUN chown -R www-data:www-data /var/www/html && \
-    chmod -R 777 /var/www/html
+# Set permissions
+RUN chown -R www-data:www-data /var/www/html && chmod -R 777 /var/www/html
 
-# Setup DVWA config
+# Configure DVWA (insecure default)
 RUN cp /var/www/html/config/config.inc.php.dist /var/www/html/config/config.inc.php
 
 # Add insecure secrets
 RUN echo "AWS_SECRET_KEY=AKIAFAKESECRET123456789" > /root/.env && \
     echo "API_KEY=verybadinsecurekey" >> /root/.env
 
+# Add fake private key
 RUN mkdir -p /root/.ssh && \
     printf '%s\n' \
 "-----BEGIN RSA PRIVATE KEY-----" \
@@ -36,7 +41,7 @@ RUN mkdir -p /root/.ssh && \
 "-----END RSA PRIVATE KEY-----" \
 > /root/.ssh/id_rsa && chmod 600 /root/.ssh/id_rsa
 
-# Copy secrets to web root (simulate exposure)
+# Expose secrets into the web root
 RUN cp /root/.env /var/www/html/secrets.env && \
     cp /root/.ssh/id_rsa /var/www/html/ssh-key.pem && \
     chmod 644 /var/www/html/secrets.env /var/www/html/ssh-key.pem
@@ -44,4 +49,3 @@ RUN cp /root/.env /var/www/html/secrets.env && \
 EXPOSE 80
 
 CMD ["/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
-
