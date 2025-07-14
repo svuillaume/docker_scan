@@ -48,7 +48,7 @@ jobs:
         with:
           LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME }}
           LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN }}
-          IMAGE_NAME:  $IMAGE_NAME
+          IMAGE_NAME:  samv-codesec-demo2025/$IMAGE_NAME:$IMAGE_TAG
           IMAGE_TAG: $IMAGE_TAG
     
 
