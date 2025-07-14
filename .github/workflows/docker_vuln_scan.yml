@@ -31,7 +31,7 @@ jobs:
             -e EXIT_FLAG=low=1 \
             -v "$(pwd):/app/src" \
             -w /app/src \
-            lacework/codesec:stable \
+            lacework/codesec:latest \
             lacework iac scan --directory=.
           echo "Lacework IaC scan exited with code $?"
 
