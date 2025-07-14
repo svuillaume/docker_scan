@@ -16,7 +16,7 @@ RUN useradd -ms /bin/bash user && echo "user ALL=(ALL) NOPASSWD:ALL" >> /etc/sud
 COPY . /app
 
 # Install vulnerable Flask version
-RUN pip install Flask==0.10  # ⚠️ multiple known CVEs
+RUN pip install Flask==0.10  
 
 # Simulate secret exposure in environment
 ENV AWS_SECRET_ACCESS_KEY="AKIAFAKESECRETKE123456"
