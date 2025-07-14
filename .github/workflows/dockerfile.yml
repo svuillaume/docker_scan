@@ -36,12 +36,17 @@ jobs:
 
       - name: Lacework IaC Policy Scan
         run: |
-          docker run --env-file env.list -v "$(pwd):/app/src" lacework/codesec:stable lacework iac scan --directory=.
+          docker run --env-file env.list \
+            --user $(id -u):$(id -g) \
+            -v "$(pwd):/app/src" \
+            lacework/codesec:stable lacework iac scan --directory=.
 
       - name: Run vulnerability scan with Lacework inline scanner
         env:
           LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME }}
           LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN }}
+          LW_SCANNER_SAVE_RESULTS: 1
+          DEBUG: 1
         run: |
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
