@@ -1,31 +1,36 @@
-# Python 2.7 image with known CVEs
-FROM python:2.7
+FROM php:5.6-apache
 
-# Set working directory
-WORKDIR /app
+RUN a2enmod rewrite
 
-# Install sudo and bash
+# Install vulnerable packages
 RUN apt-get update && \
-    apt-get install -y bash && \
+    apt-get install -y \
+      git \
+      mariadb-client \
+      unzip && \
     rm -rf /var/lib/apt/lists/*
 
-# Add a non-root user with sudo (optional)
-RUN useradd -ms /bin/bash user && echo "user ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+# Clone DVWA vulnerable app
+RUN git clone https://github.com/digininja/DVWA.git /var/www/html
 
-# Copy vulnerable app code
-COPY . /app
+# Create insecure secret and SSH key files
+RUN echo "AWS_SECRET_KEY=AKIAFAKESECRET123456789" > /root/.aws/credentials && \
+    echo "p@ssw0rd" > /root/.env && \
+    mkdir -p /root/.ssh && \
+    echo '-----BEGIN RSA PRIVATE KEY-----
+MIIEowIBAAKCAQEAzVxH+phgFakGZB3VlGm5uyM1zOpHTRmAeQQGzp+hzHb3KYLF
+fX+Hj27jVRea7OSDpjXq3M1vZTjZ2B5JPkFMgKeKoTjTg9eWa6kR93jOztZzU5JHg
+x...
+-----END RSA PRIVATE KEY-----' > /root/.ssh/id_rsa && \
+    chmod 600 /root/.ssh/id_rsa
 
-# Install vulnerable Flask version
-RUN pip install Flask==0.10  
+# Make secrets world-readable to simulate worst-case scenario
+RUN chmod 644 /root/.aws/credentials /root/.env
 
-# Simulate secret exposure in environment
-ENV AWS_SECRET_ACCESS_KEY="AKIAFAKESECRETKE123456"
-ENV PASSWORD="root"
+# Expose Apache
+EXPOSE 80
 
-# Expose port
-EXPOSE 5555
+CMD ["apache2-foreground"]
 
-# Default to Bash shell with sudo
-CMD ["bash"]
 
 
