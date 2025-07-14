@@ -29,7 +29,7 @@ jobs:
           docker run --rm \
             --env-file env.list \
             -e EXIT_FLAG=low=1 \
-            -e DOWNLOAD_TF_MODULES=false
+            -e DOWNLOAD_TF_MODULES=false \
             -v "$(pwd):/app/src" \
             -w /app/src \
             lacework/codesec:latest \
