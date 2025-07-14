@@ -8,8 +8,7 @@ on:
 env:
   IMAGE_NAME: foobar
   IMAGE_TAG: v1.0
-  LOCAL_IMAGE: foobar:v1.0
-  FULL_IMAGE_NAME: ${{ secrets.ECR_REPOSITORY_URI }}:${{ env.IMAGE_TAG }}
+
 
 jobs:
   build-scan-push:
@@ -24,7 +23,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ env.LOCAL_IMAGE }} .
+          docker build -t ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} .
 
       - name: Run vulnerability scan with Lacework inline scanner
         env:
@@ -36,7 +35,7 @@ jobs:
             -e LW_ACCOUNT_NAME=$LW_ACCOUNT_NAME \
             -e LW_ACCESS_TOKEN=$LW_ACCESS_TOKEN \
             lacework/lacework-inline-scanner:latest \
-            image evaluate ${{ env.LOCAL_IMAGE }} --save
+            image evaluate ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} --save
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v3
@@ -52,8 +51,8 @@ jobs:
 
       - name: Tag image for ECR
         run: |
-          docker tag ${{ env.LOCAL_IMAGE }} 
+          docker tag ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
       - name: Push image to ECR
         run: |
-          docker push ${{ env.FULL_IMAGE_NAME }}
+          docker push ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
