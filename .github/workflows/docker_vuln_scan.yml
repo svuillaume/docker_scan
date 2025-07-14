@@ -1,19 +1,20 @@
-name: Lacework Container Vuln Scan
+name: Build, Scan, and Push to ECR
 
 on:
   push:
-    branches: ["main"]
-  pull_request:
     branches: ["main"]
   workflow_dispatch:
 
 env:
   IMAGE_NAME: foobar
   IMAGE_TAG: v1.0
+  LOCAL_IMAGE: foobar:v1.0
+  FULL_IMAGE_NAME: ${{ secrets.ECR_REPOSITORY_URI }}:${{ env.IMAGE_TAG }}
 
 jobs:
-  scan:
+  build-scan-push:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -23,7 +24,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} .
+          docker build -t ${{ env.LOCAL_IMAGE }} .
 
       - name: Run vulnerability scan with Lacework inline scanner
         env:
@@ -34,7 +35,25 @@ jobs:
             -v /var/run/docker.sock:/var/run/docker.sock \
             -e LW_ACCOUNT_NAME=$LW_ACCOUNT_NAME \
             -e LW_ACCESS_TOKEN=$LW_ACCESS_TOKEN \
-            -e LW_SCANNER_SAVE_RESULTS=$LW_SCANNER_SAVE_RESULTS \
-            -e DEBUG=$DEBUG \
             lacework/lacework-inline-scanner:latest \
             image evaluate ${{ env.IMAGE_NAME }} ${{ env.IMAGE_TAG }} --save
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        run: |
+          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | \
+          docker login --username AWS --password-stdin ${{ secrets.ECR_REPOSITORY_URI }}
+
+      - name: Tag image for ECR
+        run: |
+          docker tag ${{ env.LOCAL_IMAGE }} ${{ env.FULL_IMAGE_NAME }}
+
+      - name: Push image to ECR
+        run: |
+          docker push ${{ env.FULL_IMAGE_NAME }}
