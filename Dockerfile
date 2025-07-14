@@ -14,7 +14,7 @@ RUN apt-get update && \
 # Secrets hardcoded directly into image
 RUN mkdir -p /root/.aws /root/.ssh
 
-RUN echo "AWS_SECRET_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE-DEM02200" > /root/.aws/credentials && \
+RUN echo "AWS_SECRET_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE1200-DEM02200" > /root/.aws/credentials && \
     echo "PRIVATE_KEY=very-insecure-key" > /root/.env
 
 # Insecure SSH private key written into image
