@@ -5,13 +5,10 @@ RUN echo "AWS_SECRET_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE" > /root/.aws/credentials &
     echo "PRIVATE_KEY=very-insecure-key" > /root/.env
 
 # Exposed SSH private key
-RUN mkdir -p /root/.ssh && \
-    printf '%s\n' \
-"-----BEGIN RSA PRIVATE KEY-----" \
-"MIIEowIBAAKCAQEAsamplefakekeycontenthere" \
-"MoreLinesOfFakePrivateKeyMaterial" \
-"-----END RSA PRIVATE KEY-----" \
-> /root/.ssh/id_rsa && chmod 600 /root/.ssh/id_rsa
+RUN mkdir -p /root/.aws && \
+    echo "AWS_SECRET_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE" > /root/.aws/credentials && \
+    echo "PRIVATE_KEY=very-insecure-key" > /root/.env
+
 
 # Add secrets to exposed location
 RUN cp /root/.env /secrets.env && \
