@@ -22,13 +22,12 @@ jobs:
           echo "LW_ACCOUNT=${{ secrets.LW_ACCOUNT }}" >> env.list
           echo "LW_API_KEY=${{ secrets.LW_API_KEY }}" >> env.list
           echo "LW_API_SECRET=${{ secrets.LW_API_SECRET }}" >> env.list
-          echo "EXIT_FLAG=low" >> env.list
 
       - name: Scan the repo for vulnerabilities in IaC
         run: |
           docker run --rm \
             --env-file env.list \
-            -e EXIT_FLAG='low' \
+            -e "EXIT_FLAG=low" \
             -v "$(pwd):/app/src" \
             lacework/codesec:stable \
             lacework iac scan --directory=.
