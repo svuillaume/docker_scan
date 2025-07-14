@@ -1,37 +1,79 @@
-name: Lacework Container Image Scan
+name: Build, Vuln Scan, and Push to ECR
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
 
 env:
-  IMAGE_NAME: samv_demo
-  IMAGE_TAG: v1.0.1
+  IMAGE_NAME: foobar
+  IMAGE_TAG: v1.0
 
 jobs:
-  scan-container:
+  build-scan-push:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Create environment variables file
+        run: |
+          env | grep "GITHUB_\|LW_\|CI_" > env.list
+          echo "LW_ACCOUNT=${{ secrets.LW_ACCOUNT }}" >> env.list
+          echo "LW_API_KEY=${{ secrets.LW_API_KEY }}" >> env.list
+          echo "LW_API_SECRET=${{ secrets.LW_API_SECRET }}" >> env.list
+
+      - name: Scan the repo for vulnerabilities in IaC
+        run: |
+          docker run --rm \
+            --env-file env.list \
+            -e EXIT_FLAG=low=1 \
+            -v "$(pwd):/app/src" \
+            -w /app/src \
+            lacework/codesec:latest \
+            lacework iac scan --directory=.
+          echo "Lacework IaC scan exited with code $?"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} .
+          docker build -t $IMAGE_NAME:$IMAGE_TAG .
 
-      - name: Scan container images for vulnerabilities using Lacework
-        uses: lacework/lw-scanner-action@v1.4.0
-        with:
+      - name: Run vulnerability scan with Lacework inline scanner
+        env:
           LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME }}
           LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN }}
-          IMAGE_NAME: ${{ env.IMAGE_NAME }}
-          IMAGE_TAG: ${{ env.IMAGE_TAG }}
-        env:
-          DEBUG: "true"
-          LW_SCANNER_SAVE_RESULTS: "true"
+        run: |
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -e LW_ACCOUNT_NAME=$LW_ACCOUNT_NAME \
+            -e LW_ACCESS_TOKEN=$LW_ACCESS_TOKEN \
+            lacework/lacework-inline-scanner:latest \
+            image evaluate $IMAGE_NAME:$IMAGE_TAG --save
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ca-central-1
+
+      - name: Set ECR_URI
+        run: echo "ECR_URI=${{ secrets.ECR_REPOSITORY_URI }}" >> $GITHUB_ENV
+
+      - name: Log in to Amazon ECR
+        run: |
+          aws ecr get-login-password --region ca-central-1 | \
+          docker login --username AWS --password-stdin $ECR_URI
+
+      - name: Tag image for ECR
+        run: |
+          docker tag $IMAGE_NAME:$IMAGE_TAG $ECR_URI:$IMAGE_TAG
+
+      - name: Push image to ECR
+        run: |
+          docker push $ECR_URI:$IMAGE_TAG
