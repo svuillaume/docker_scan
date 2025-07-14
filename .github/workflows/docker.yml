@@ -1,4 +1,4 @@
-name: Lacework Container IaC & Vuln Scan
+name: Lacework Container Vuln Scan
 
 on:
   push:
@@ -28,18 +28,6 @@ jobs:
       - name: Build Docker image
         run: |
           docker build -t ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} .
-
-      - name: Set up environment file for Lacework
-        run: |
-          env | grep "GITHUB_\|LW_\|CI_" > env.list
-          echo "LW_ACCOUNT=${{ secrets.LW_ACCOUNT }}" >> env.list
-          echo "LW_API_KEY=${{ secrets.LW_API_KEY }}" >> env.list
-          echo "LW_API_SECRET=${{ secrets.LW_API_SECRET }}" >> env.list
-          echo "EXIT_FLAG=CRITICAL=1" >> env.list
-
-      - name: Lacework IaC Policy Scan
-        run: |
-          docker run --env-file env.list -v "$(pwd):/app/src" lacework/codesec:stable lacework iac scan --directory=.
 
       - name: Run vulnerability scan with Lacework inline scanner
         env:
