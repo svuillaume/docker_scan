@@ -28,5 +28,7 @@ RUN cp /root/.env /secrets.env && \
 # No HEALTHCHECK defined
 # Best: Add a HEALTHCHECK for long-running containers
 
+EXPOSE 5556/tcp
+
 # Default CMD runs an interactive shell (not suitable for production)
 CMD ["/bin/bash"]
