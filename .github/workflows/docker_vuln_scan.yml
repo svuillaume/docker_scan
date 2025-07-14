@@ -3,17 +3,13 @@ name: Lacework Container Vuln Scan
 on:
   push:
     branches: ["main"]
-    paths:
-      - 'Dockerfile'
   pull_request:
     branches: ["main"]
-    paths:
-      - 'Dockerfile'
   workflow_dispatch:
 
 env:
-  IMAGE_NAME: foo
-  IMAGE_TAG: v1.100
+  IMAGE_NAME: foobar
+  IMAGE_TAG: v1.0
 
 jobs:
   scan:
