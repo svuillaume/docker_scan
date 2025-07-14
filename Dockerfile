@@ -1,36 +1,37 @@
-FROM php:5.6-apache
+FROM vulnerables/web-dvwa
 
-RUN a2enmod rewrite
-
-# Install vulnerable packages
-RUN apt-get update && \
+# Fix expired Debian APT mirrors and install packages
+RUN sed -i 's|http://deb.debian.org|http://archive.debian.org|g' /etc/apt/sources.list && \
+    sed -i 's|security.debian.org|archive.debian.org|g' /etc/apt/sources.list && \
+    echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid-until && \
+    apt-get update && \
     apt-get install -y \
-      git \
-      mariadb-client \
-      unzip && \
+        git \
+        mariadb-client \
+        unzip && \
     rm -rf /var/lib/apt/lists/*
 
-# Clone DVWA vulnerable app
-RUN git clone https://github.com/digininja/DVWA.git /var/www/html
+# Create insecure environment variable file
+RUN echo "API_KEY=super-insecure-api-key-123456" > /root/.env && \
+    echo "AWS_SECRET_KEY=AKIAFAKESECRET123456789" >> /root/.env && \
+    chmod 644 /root/.env
 
-# Create insecure secret and SSH key files
+# Add a dummy private SSH key
 RUN mkdir -p /root/.ssh && \
     printf '%s\n' \
 "-----BEGIN RSA PRIVATE KEY-----" \
-"MIIEpAIBAAKCAQEA1KjN6w7RQnZfRk7IVtkbMoP5lA0uEJ2JfNjHdqnn4n+9Yrlw" \
-"x3N1D4v8v9gA1VzAjkzY+yO4KMBukVklNv6E5z0QKBgQDLvjOZ6vhMx1x7fEp0u3Q" \
-"wIDAQABAoIBAQCq9EvTxY4vZx+JZ1B3Et+PvPmlqKdj0Bt9UJ2OYo1VZrhT" \
+"MIIEpAIBAAKCAQEAv0v5hZ0I1F3y4ZAmvqziZP1+ZuDeU9RjYkJD9i4v5gS8ohAb" \
+"b7zKlJdTbZBgZglLzBslh0y+PwS2uCJUXKT4h6H6KNmBrv2fLwH1vuvLf9Af3Yef" \
+"YJxDNdVvT1ENeNvQUHjj1vP2ZwIDAQABAoIBAQCgZT0mL+R0iV8YjvQKQ0J2+zUY" \
 "-----END RSA PRIVATE KEY-----" \
 > /root/.ssh/id_rsa && \
     chmod 600 /root/.ssh/id_rsa
 
-# Make secrets world-readable to simulate worst-case scenario
-RUN chmod 644 /root/.aws/credentials /root/.env
+# Copy secrets into the web root (to simulate exposure)
+RUN cp /root/.env /var/www/html/secrets.env && \
+    cp /root/.ssh/id_rsa /var/www/html/ssh-key.pem && \
+    chmod 644 /var/www/html/secrets.env /var/www/html/ssh-key.pem
 
-# Expose Apache
 EXPOSE 80
 
 CMD ["apache2-foreground"]
-
-
-
