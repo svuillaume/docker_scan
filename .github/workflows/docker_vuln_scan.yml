@@ -17,13 +17,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Build Docker image
-        run: |
-          docker build -t $IMAGE_NAME:$IMAGE_TAG .
-
       - name: Create environment variables file
         run: |
           env | grep "GITHUB_\|LW_\|CI_" > env.list
@@ -40,6 +33,13 @@ jobs:
             -w /app/src \
             lacework/codesec:stable \
             lacework iac scan --directory=.
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build Docker image
+        run: |
+          docker build -t $IMAGE_NAME:$IMAGE_TAG .
 
       - name: Run vulnerability scan with Lacework inline scanner
         env:
