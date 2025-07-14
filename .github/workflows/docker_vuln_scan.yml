@@ -56,7 +56,7 @@ jobs:
           echo "account = \"${{ secrets.LW_ACCOUNT_NAME }}\"" > .lacework/config.toml
           echo "access_token = \"${{ secrets.LW_ACCESS_TOKEN }}\"" >> .lacework/config.toml
       
-          lw-scanner image evaluate ${{env.IMAGE_NAME}}:scan-temp \
+          lw-scanner image evaluate ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} \
             -n "${{ secrets.LW_ACCOUNT_NAME }}" \
             -t "${{ secrets.LW_ACCESS_TOKEN }}" \
             --policy
