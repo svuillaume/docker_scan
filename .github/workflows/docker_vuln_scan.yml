@@ -34,6 +34,7 @@ jobs:
             -w /app/src \
             lacework/codesec:stable \
             lacework iac scan --directory=.
+          echo "Lacework IaC scan exited with code $?"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
