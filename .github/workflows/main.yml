@@ -34,7 +34,7 @@ jobs:
           docker pull $IMAGE_URI
 
       - name: Run Lacework Container Scanner
-        uses: lacework/scanner-action@v1
+        uses: lacework/lw-scanner-action@v1.4.0
         with:
           image: ${{ env.IMAGE_URI }}
         env:
