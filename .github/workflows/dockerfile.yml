@@ -46,6 +46,8 @@ jobs:
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
             -e LW_ACCOUNT_NAME=$LW_ACCOUNT_NAME \
-            -e LW_API_TOKEN=$LW_API_TOKEN \
-            lacework/lw-scanner \
-            --image ${{ env.FULL_IMAGE_NAME }}
+            -e LW_ACCESS_TOKEN=$LW_ACCESS_TOKEN \
+            -e LW_SCANNER_SAVE_RESULTS=$LW_SCANNER_SAVE_RESULTS \
+            -e DEBUG=$DEBUG \
+            lacework/lacework-inline-scanner:latest \
+            image evaluate ${{ env.IMAGE_NAME }} ${{ env.IMAGE_TAG }} --save
