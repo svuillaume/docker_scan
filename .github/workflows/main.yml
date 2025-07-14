@@ -42,3 +42,18 @@ jobs:
           IMAGE_TAG: ${{ env.IMAGE_TAG }}
           LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME }}
           LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN }}
+          SAVE_RESULTS_IN_LACEWORK: true
+          RESULTS_IN_GITHUB_SUMMARY: true
+
+      - name: Change formatting for PR
+        run: |
+            echo "# Lacework Inline Scanner Result" > pr-results.md
+            echo "<pre>" >> pr-results.md
+            cat results.stdout >> pr-results.md
+            echo "</pre>" >> pr-results.md
+
+      - name: Comment PR
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          filePath: pr-results.md
+
