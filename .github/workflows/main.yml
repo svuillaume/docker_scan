@@ -28,7 +28,6 @@ jobs:
         run: |
           docker run --rm \
             --env-file env.list \
-            --user $(id -u):$(id -g) \
             -v "$(pwd):/app/src" \
             lacework/codesec:stable \
             lacework iac scan --directory=.
