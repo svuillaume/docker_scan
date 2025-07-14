@@ -1,4 +1,4 @@
-name: Build, Scan, and Push to ECR
+name: Build, Vuln Scan, and Push to ECR
 
 on:
   push:
@@ -8,7 +8,6 @@ on:
 env:
   IMAGE_NAME: foobar
   IMAGE_TAG: v1.0
-
 
 jobs:
   build-scan-push:
@@ -23,7 +22,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} .
+          docker build -t $IMAGE_NAME:$IMAGE_TAG .
 
       - name: Run vulnerability scan with Lacework inline scanner
         env:
@@ -35,7 +34,7 @@ jobs:
             -e LW_ACCOUNT_NAME=$LW_ACCOUNT_NAME \
             -e LW_ACCESS_TOKEN=$LW_ACCESS_TOKEN \
             lacework/lacework-inline-scanner:latest \
-            image evaluate ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} --save
+            image evaluate $IMAGE_NAME:$IMAGE_TAG --save
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v3
@@ -45,16 +44,18 @@ jobs:
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ca-central-1
 
+      - name: Set ECR_URI
+        run: echo "ECR_URI=${{ secrets.ECR_REPOSITORY_URI }}" >> $GITHUB_ENV
+
       - name: Log in to Amazon ECR
         run: |
           aws ecr get-login-password --region ca-central-1 | \
-          docker login --username AWS --password-stdin ${{ secrets.ECR_REPOSITORY_URI }}
+          docker login --username AWS --password-stdin $ECR_URI
 
       - name: Tag image for ECR
         run: |
           docker tag $IMAGE_NAME:$IMAGE_TAG $ECR_URI:$IMAGE_TAG
-        
 
       - name: Push image to ECR
         run: |
-          docker push ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          docker push $ECR_URI:$IMAGE_TAG
