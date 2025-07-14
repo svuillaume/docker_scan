@@ -52,7 +52,7 @@ jobs:
 
       - name: Tag image for ECR
         run: |
-          docker tag ${{ env.IMAGE_NAME }} ${{ env.IMAGE_TAG }} 
+          docker tag $IMAGE_NAME:$IMAGE_TAG $ECR_URI:$IMAGE_TAG
         
 
       - name: Push image to ECR
