@@ -31,33 +31,17 @@ jobs:
           echo "LW_API_KEY=${{ secrets.LW_API_KEY }}" >> env.list
           echo "LW_API_SECRET=${{ secrets.LW_API_SECRET }}" >> env.list
 
-      - name: Scan the repo for vulnerabilities in IaC
-        shell: bash
-        run: |
-          set -e
-
-          # Prepare temporary scan directory
-          mkdir -p tmp-scan/workdir
-          cp -r ./* tmp-scan/workdir
-
-          # Perform Lacework IaC scan with Docker
-          docker run --rm \
-            -v "$PWD/tmp-scan/workdir:/app/src" \
-            -w /app/src \
-            lacework/codesec:latest \
-            bash -c 'lacework iac scan -d . --format json > /app/src/output.json'
-
-          echo "Lacework IaC scan result:"
-          jq . tmp-scan/workdir/output.json
-
-          # Check for critical findings
-          CRIT_COUNT=$(jq '[.[] | select(.severity=="Critical")] | length' tmp-scan/workdir/output.json)
-          if [ "$CRIT_COUNT" -gt 0 ]; then
-            echo "❌ Found $CRIT_COUNT CRITICAL IaC finding(s)"
-            exit 1
-          else
-            echo "✅ No CRITICAL findings in Lacework IaC scan"
-          fi
+      - name: Create environment variables file
+            # Create an environment variable file that would be passed to the IaC docker image. Note that all relevant environment values need to be passed through here.
+            run: |
+                env | grep "GITHUB_\|LW_\|CI_" > env.list
+                echo "LW_ACCOUNT=${{ secrets.LW_ACCOUNT }}" >> env.list
+                echo "LW_API_KEY=${{ secrets.LW_API_KEY }}" >> env.list
+                echo "LW_API_SECRET=${{ secrets.LW_API_SECRET }}" >> env.list
+                echo "EXIT_FLAG=CRITICAL=1" >> env.list
+            - name: Scan the repo for vulnerabilities in IaC
+            run: |
+                docker run --env-file env.list -v "$(pwd):/app/src" lacework/codesec:stable lacework iac scan --directory=.
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v3
