@@ -40,6 +40,7 @@ jobs:
             -w /app/src \
             lacework/codesec:latest \
             lacework iac scan -d . --format json >> output.json
+          cat output.json | jq .
           echo "Lacework IaC scan exited with code $?"
 
       - name: Configure AWS credentials
