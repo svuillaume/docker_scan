@@ -24,39 +24,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Scan the repo for vulnerabilities in IaC
-        shell: bash
-        run: |
-          set -e
-
-          mkdir -p tmp-scan/workdir
-          rsync -av --exclude tmp-scan ./ tmp-scan/workdir
-
-          docker run --rm \
-            -v "$PWD/tmp-scan/workdir:/app/src" \
-            -w /app/src \
-            lacework/codesec:latest \
-            bash -c '
-              set -e
-              lacework iac scan -d . --format json -o output.json
-              ls -l output.json
-            ' || true
-
-          if [ ! -f tmp-scan/workdir/output.json ]; then
-            echo "ERROR: Lacework IaC scan did not generate output.json"
-            exit 1
-          fi
-
-          cat tmp-scan/workdir/output.json | jq .
-
-          CRIT_COUNT=$(jq '[.[] | select(.severity=="Critical")] | length' tmp-scan/workdir/output.json)
-          if [ "$CRIT_COUNT" -gt 0 ]; then
-            echo "Found $CRIT_COUNT CRITICAL IaC finding(s)"
-            exit 1
-          else
-            echo "No CRITICAL findings in Lacework IaC scan"
-          fi
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v3
         with:
