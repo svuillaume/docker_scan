@@ -36,9 +36,17 @@ jobs:
             -v "$PWD/tmp-scan/workdir:/app/src" \
             -w /app/src \
             lacework/codesec:latest \
-            bash -c 'lacework iac scan -d . --format json > /app/src/output.json' || true
+            bash -c '
+              set -e
+              lacework iac scan -d . --format json -o output.json
+              ls -l output.json
+            ' || true
 
-          echo "Lacework IaC scan result:"
+          if [ ! -f tmp-scan/workdir/output.json ]; then
+            echo "ERROR: Lacework IaC scan did not generate output.json"
+            exit 1
+          fi
+
           cat tmp-scan/workdir/output.json | jq .
 
           CRIT_COUNT=$(jq '[.[] | select(.severity=="Critical")] | length' tmp-scan/workdir/output.json)
@@ -91,3 +99,20 @@ jobs:
           echo "<pre>" >> pr-results.md
           echo "Scan completed. See the GitHub Summary above or view results in Lacework." >> pr-results.md
           echo "</pre>" >> pr-results.md
+
+      - name: Comment PR with scan summary
+        if: github.event_name == 'pull_request'
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          filePath: pr-results.md
+
+      - name: Build and Push Docker image to ECR
+        if: github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:latest
+            ${{ env.IMAGE_NAME }}:${{ env.VERSION }}
+            ${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }}
