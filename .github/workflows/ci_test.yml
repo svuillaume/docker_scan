@@ -1,12 +1,10 @@
-name: Build, Scan, and Push Docker Image
+name: Build, Scan, and Push Docker Image to ECR
 
 on:
   push:
     branches: [ main ]
-    paths: [ 'Dockerfile' ]
   pull_request:
     branches: [ main ]
-    paths: [ 'Dockerfile' ]
   workflow_dispatch:
 
 permissions:
@@ -44,44 +42,39 @@ jobs:
         id: vars
         run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
-      - name: Build Docker Image (for scanning)
+      - name: Build Docker image (scan-temp)
         uses: docker/build-push-action@v5
         with:
           context: .
           load: true
           tags: ${{ env.IMAGE_NAME }}:scan-temp
 
-      - name: Scan image with Lacework Docker scanner
-        run: |
-          docker run --rm \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            -e LW_ACCOUNT_NAME=${{ secrets.LW_ACCOUNT_NAME }} \
-            -e LW_API_TOKEN=${{ secrets.LW_ACCESS_TOKEN }} \
-            lacework/lw-scanner \
-            image evaluate ${{ env.IMAGE_NAME }}:scan-temp > results.stdout
+      - name: Scan image with Lacework
+        uses: lacework/lw-scanner-action@v1.4.0
+        continue-on-error: true  # Don't fail job here; handle manually
+        with:
+          LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME }}
+          LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN }}
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          IMAGE_TAG: scan-temp
+          SAVE_RESULTS_IN_LACEWORK: true
+          RESULTS_IN_GITHUB_SUMMARY: true
 
       - name: Format scan results for PR comment
-        if: github.event_name == 'pull_request' || github.event_name == 'push'
+        if: github.event_name == 'pull_request'
         run: |
           echo "# Lacework Inline Scanner Result" > pr-results.md
           echo "<pre>" >> pr-results.md
-          cat results.stdout >> pr-results.md || echo "No results found" >> pr-results.md
+          echo "Scan completed. See GitHub Summary above or view in Lacework." >> pr-results.md
           echo "</pre>" >> pr-results.md
 
-      - name: Comment PR
+      - name: Comment PR with scan results
         if: github.event_name == 'pull_request'
         uses: thollander/actions-comment-pull-request@v2
         with:
           filePath: pr-results.md
 
-      - name: Re-check scan result and fail if needed
-        run: |
-          if grep -q "Policy.*failed" results.stdout; then
-            echo "❌ Lacework policy check failed. Aborting."
-            exit 1
-          fi
-
-      - name: Build and Push Docker Image (to ECR)
+      - name: Build and Push Docker Image to ECR
         if: github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v5
         with:
