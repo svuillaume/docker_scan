@@ -36,11 +36,10 @@ jobs:
         run: |
           docker run --rm \
             --env-file env.list \
-            -e JSON_OUTPUT_FILE \
             -v "$(pwd):/app/src" \
             -w /app/src \
             lacework/codesec:latest \
-            lacework iac scan --directory=. --output json > scan-result.json || true
+            lacework iac scan -d . --format json >> output.json
           echo "Lacework IaC scan exited with code $?"
 
       - name: Configure AWS credentials
