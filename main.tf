@@ -45,7 +45,7 @@ resource "aws_s3_bucket" "unencrypted_bucket_demo" {
 resource "aws_security_group" "open_sg_demo" {
   name        = "allow_all_inbound"
   description = "Allow everything inbound"
-  vpc_id      = "vpc-02bb3bfffb72e11c1" # Replace with your VPC ID
+  vpc_id      = "vpc-02bb3bfffb72e11c1"
 
   ingress {
     from_port   = 0
@@ -66,7 +66,7 @@ resource "aws_security_group" "open_sg_demo" {
 resource "aws_instance" "vulnerable_ec2_demo" {
   ami                    = "ami-0c02fb55956c7d316"
   instance_type          = "t2.micro"
-  subnet_id              = "subnet-xxxxxxxx" # Replace with your Subnet ID
+  subnet_id              = "subnet-017564b2267b23fae"
   vpc_security_group_ids = [aws_security_group.open_sg_demo.id]
 
   user_data = <<-EOF
@@ -90,7 +90,7 @@ resource "aws_instance" "vulnerable_ec2_demo" {
 resource "aws_instance" "ec2_with_imdsv1" {
   ami                    = "ami-0c02fb55956c7d316"
   instance_type          = "t2.micro"
-  subnet_id              = "subnet-xxxxxxxx"
+  subnet_id              = "subnet-017564b2267b23fae"
   vpc_security_group_ids = [aws_security_group.open_sg_demo.id]
 
   metadata_options {
@@ -107,7 +107,7 @@ resource "aws_instance" "ec2_with_imdsv1" {
 resource "aws_instance" "ec2_with_secret" {
   ami                    = "ami-0c02fb55956c7d316"
   instance_type          = "t2.micro"
-  subnet_id              = "subnet-xxxxxxxx"
+  subnet_id              = "subnet-017564b2267b23fae"
   vpc_security_group_ids = [aws_security_group.open_sg_demo.id]
 
   user_data = <<-EOF
@@ -127,5 +127,32 @@ resource "aws_iam_user" "insecure_user_demo" {
 
 resource "aws_iam_access_key" "insecure_key_demo" {
   user    = aws_iam_user.insecure_user_demo.name
-  pgp_key = "keybase:somekey" # Optional
+  pgp_key = "keybase:somekey"
+}
+
+# 8. IAM Admin role (over-privileged)
+resource "aws_iam_role" "admin_role_demo" {
+  name = "insecure-admin-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = "sts:AssumeRole",
+        Effect = "Allow",
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  tags = {
+    Name = "FullAdminRole"
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "admin_role_attachment_demo" {
+  role       = aws_iam_role.admin_role_demo.name
+  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
 }
