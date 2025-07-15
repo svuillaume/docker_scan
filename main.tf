@@ -1,61 +1,17 @@
 provider "aws" {
-  region = "us-central-1"
+  region = "ca-central-1"
 }
 
-resource "aws_iam_role" "admin_role" {
-  name = "vulnerable-admin-role"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Action    = "sts:AssumeRole",
-        Effect    = "Allow",
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        }
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "admin_policy" {
-  role       = aws_iam_role.admin_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
-}
-
-resource "aws_instance" "vulnerable_ec2" {
-  ami                    = "ami-0c02fb55956c7d316" # Amazon Linux 2 AMI (us-east-1)
-  instance_type          = "t2.micro"
-  associate_public_ip_address = true
-
-  iam_instance_profile = aws_iam_instance_profile.ec2_profile.name
-
-  user_data = <<-EOF
-              #!/bin/bash
-              echo "Hello from vulnerable instance!" > /home/ec2-user/hello.txt
-              EOF
-
-  tags = {
-    Name = "vulnerable-ec2"
-  }
-}
-
-resource "aws_iam_instance_profile" "ec2_profile" {
-  name = "vulnerable-ec2-profile"
-  role = aws_iam_role.admin_role.name
-}
-
-resource "aws_security_group" "vulnerable_sg" {
-  name        = "vulnerable-sg"
-  description = "Allow all inbound traffic"
-  vpc_id      = data.aws_vpc.default.id
+resource "aws_security_group" "insecure_sg" {
+  name        = "insecure_sg"
+  description = "Security group with wide open rules"
+  vpc_id      = "vpc-12345678"  # dummy VPC
 
   ingress {
-    description = "All traffic"
     from_port   = 0
     to_port     = 65535
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]  # Wide open to the world
   }
 
   egress {
@@ -64,41 +20,31 @@ resource "aws_security_group" "vulnerable_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-}
-
-data "aws_vpc" "default" {
-  default = true
-}
-
-resource "aws_s3_bucket" "vulnerable_bucket" {
-  bucket = "vulnerable-public-bucket-${random_id.bucket_id.hex}"
 
   tags = {
-    Name = "vulnerable-bucket"
+    Name = "InsecureSG"
   }
 }
 
-resource "random_id" "bucket_id" {
-  byte_length = 4
+resource "aws_security_group_rule" "inbound_all" {
+  type              = "ingress"
+  from_port         = 22
+  to_port           = 22
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]  # Open SSH
+  security_group_id = aws_security_group.insecure_sg.id
 }
 
-resource "aws_s3_bucket_policy" "public_access" {
-  bucket = aws_s3_bucket.vulnerable_bucket.id
+resource "aws_instance" "bad_ec2" {
+  ami                    = "ami-0c55b159cbfafe1f0"  # dummy AMI
+  instance_type          = "t2.micro"
+  vpc_security_group_ids = [aws_security_group.insecure_sg.id]
+  user_data              = <<EOF
+#!/bin/bash
+echo "SECRET=hardcodedsecretkey" > /etc/secrets.txt
+EOF
 
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Sid       = "PublicReadGetObject",
-        Effect    = "Allow",
-        Principal = "*",
-        Action    = [
-          "s3:GetObject"
-        ],
-        Resource = [
-          "${aws_s3_bucket.vulnerable_bucket.arn}/*"
-        ]
-      }
-    ]
-  })
+  tags = {
+    Name = "BadEC2Instance"
+  }
 }
