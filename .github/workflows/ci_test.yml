@@ -38,7 +38,7 @@ jobs:
 
           # Prepare temporary scan directory
           mkdir -p tmp-scan/workdir
-          cp -r . tmp-scan/workdir
+          cp -r ./* tmp-scan/workdir
 
           # Perform Lacework IaC scan with Docker
           docker run --rm \
