@@ -1,17 +1,15 @@
-# ⚠️ FOR TESTING PURPOSES ONLY — Contains known vulnerabilities
-FROM ubuntu:16.04
+# ⚠️ FOR SCANNING TEST PURPOSES ONLY
+FROM debian:stretch
 
-# Install outdated, vulnerable packages
 RUN apt-get update && \
-    apt-get install -y \
-    openssl=1.0.2g-1ubuntu4.20 \
-    wget \
-    curl \
-    vim && \
+    apt-get install -y wget curl vim && \
+    echo "deb http://snapshot.debian.org/archive/debian/20170701T000000Z stretch main" > /etc/apt/sources.list && \
+    apt-get update && \
+    apt-get install -y openssl=1.1.0c-2 && \
     rm -rf /var/lib/apt/lists/*
 
-# Optional: Simulate sensitive info exposure (for scanner rules)
-ENV AWS_SECRET_ACCESS_KEY="AKIAIOSFODNN7EXAMPLE"
+# Simulate a secret exposed in image
+ENV AWS_SECRET_ACCESS_KEY="AKIA-CRITICAL-EXAMPLE-1234"
 
 CMD ["/bin/bash"]
 
