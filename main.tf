@@ -1,5 +1,5 @@
 provider "aws" {
-  region = "us-east-1"
+  region = "ca-central-1"
 }
 
 # 1. Public S3 bucket (intentionally public)
@@ -45,7 +45,7 @@ resource "aws_s3_bucket" "unencrypted_bucket_demo" {
 resource "aws_security_group" "open_sg_demo" {
   name        = "allow_all_inbound"
   description = "Allow everything inbound"
-  vpc_id      = "vpc-xxxxxxxx" # Replace with your VPC ID
+  vpc_id      = "vpc-02bb3bfffb72e11c1" # Replace with your VPC ID
 
   ingress {
     from_port   = 0
