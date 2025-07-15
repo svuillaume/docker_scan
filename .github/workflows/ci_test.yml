@@ -39,7 +39,10 @@ jobs:
             -v "$(pwd):/app/src" \
             -w /app/src \
             lacework/codesec:latest \
-            lacework iac scan --directory=.
+            lacework iac scan --directory=. \
+            --severity-threshold Critical \
+            --exit-code
+
           echo "Lacework IaC scan exited with code $?"
 
       - name: Configure AWS credentials
