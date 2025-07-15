@@ -2,8 +2,8 @@ provider "aws" {
   region = "us-east-1"
 }
 
-# 1. Public S3 bucket
-resource "aws_s3_bucket" "public_bucket" {
+# 1. Public S3 bucket (intentionally public)
+resource "aws_s3_bucket" "public_bucket_demo" {
   bucket = "extremely-insecure-public-bucket-demo"
   acl    = "public-read"
 
@@ -17,8 +17,8 @@ resource "aws_s3_bucket" "public_bucket" {
   }
 }
 
-resource "aws_s3_bucket_policy" "public_policy" {
-  bucket = aws_s3_bucket.public_bucket.id
+resource "aws_s3_bucket_policy" "public_policy_demo" {
+  bucket = aws_s3_bucket.public_bucket_demo.id
 
   policy = jsonencode({
     Version = "2012-10-17",
@@ -27,16 +27,25 @@ resource "aws_s3_bucket_policy" "public_policy" {
       Effect    = "Allow",
       Principal = "*",
       Action    = "s3:GetObject",
-      Resource  = "${aws_s3_bucket.public_bucket.arn}/*"
+      Resource  = "${aws_s3_bucket.public_bucket_demo.arn}/*"
     }]
   })
 }
 
-# 2. Insecure security group
-resource "aws_security_group" "open_sg" {
+# 2. Unencrypted S3 bucket
+resource "aws_s3_bucket" "unencrypted_bucket_demo" {
+  bucket = "totally-unprotected-data-bucket"
+
+  tags = {
+    Name = "NoEncryption"
+  }
+}
+
+# 3. Open security group
+resource "aws_security_group" "open_sg_demo" {
   name        = "allow_all_inbound"
   description = "Allow everything inbound"
-  vpc_id      = "vpc-xxxxxxxx" # <-- Replace with your VPC ID
+  vpc_id      = "vpc-xxxxxxxx" # Replace with your VPC ID
 
   ingress {
     from_port   = 0
@@ -53,12 +62,12 @@ resource "aws_security_group" "open_sg" {
   }
 }
 
-# 3. EC2 with hardcoded root password and unencrypted EBS
-resource "aws_instance" "vulnerable_ec2" {
-  ami                    = "ami-0c02fb55956c7d316" # Amazon Linux 2 AMI (us-east-1)
+# 4. EC2 with hardcoded root password, unencrypted disk
+resource "aws_instance" "vulnerable_ec2_demo" {
+  ami                    = "ami-0c02fb55956c7d316"
   instance_type          = "t2.micro"
-  subnet_id              = "subnet-xxxxxxxx" # <-- Replace with your Subnet ID
-  vpc_security_group_ids = [aws_security_group.open_sg.id]
+  subnet_id              = "subnet-xxxxxxxx" # Replace with your Subnet ID
+  vpc_security_group_ids = [aws_security_group.open_sg_demo.id]
 
   user_data = <<-EOF
               #!/bin/bash
@@ -66,13 +75,57 @@ resource "aws_instance" "vulnerable_ec2" {
               EOF
 
   root_block_device {
-    volume_size = 8
-    volume_type = "gp2"
+    volume_size           = 8
+    volume_type           = "gp2"
     delete_on_termination = true
-    encrypted = false  # <-- Unencrypted disk
+    encrypted             = false
   }
 
   tags = {
     Name = "InsecureEC2"
   }
+}
+
+# 5. EC2 with IMDSv1 enabled
+resource "aws_instance" "ec2_with_imdsv1" {
+  ami                    = "ami-0c02fb55956c7d316"
+  instance_type          = "t2.micro"
+  subnet_id              = "subnet-xxxxxxxx"
+  vpc_security_group_ids = [aws_security_group.open_sg_demo.id]
+
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens   = "optional"
+  }
+
+  tags = {
+    Name = "EC2WithIMDSv1"
+  }
+}
+
+# 6. EC2 with hardcoded secret
+resource "aws_instance" "ec2_with_secret" {
+  ami                    = "ami-0c02fb55956c7d316"
+  instance_type          = "t2.micro"
+  subnet_id              = "subnet-xxxxxxxx"
+  vpc_security_group_ids = [aws_security_group.open_sg_demo.id]
+
+  user_data = <<-EOF
+              #!/bin/bash
+              export DB_PASSWORD="SuperSecret123"
+              EOF
+
+  tags = {
+    Name = "EC2WithHardcodedSecret"
+  }
+}
+
+# 7. IAM user and hardcoded access key
+resource "aws_iam_user" "insecure_user_demo" {
+  name = "insecure-user"
+}
+
+resource "aws_iam_access_key" "insecure_key_demo" {
+  user    = aws_iam_user.insecure_user_demo.name
+  pgp_key = "keybase:somekey" # Optional
 }
