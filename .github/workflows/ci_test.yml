@@ -35,7 +35,7 @@ jobs:
         run: |
           docker run --rm \
             --env-file env.list \
-            -e EXIT_FLAG=low=1 \
+            -e EXIT_FLAG=all=1 \
             -v "$(pwd):/app/src" \
             -w /app/src \
             lacework/codesec:latest \
