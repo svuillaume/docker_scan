@@ -24,14 +24,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Clean up old .terraform
-        run: rm -rf .terraform
-
-      - name: Fix permissions on workspace
-        run: sudo chown -R $USER:$USER .
-
-      - name: Terraform Init
-        run: terraform init
 
       - name: Create environment variables file
         run: |
