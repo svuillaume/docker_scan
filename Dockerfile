@@ -1,16 +1,12 @@
-# ⚠️ FOR SCANNING TEST PURPOSES ONLY
-FROM debian:stretch
+# ⚠️ INTENTIONALLY INSECURE FOR SCANNER TESTING ONLY
+FROM node:10.0.0
 
-RUN apt-get update && \
-    apt-get install -y wget curl vim && \
-    echo "deb http://snapshot.debian.org/archive/debian/20170701T000000Z stretch main" > /etc/apt/sources.list && \
-    apt-get update && \
-    apt-get install -y openssl=1.1.0c-2 && \
-    rm -rf /var/lib/apt/lists/*
+# Optional: add secrets and unsafe practices
+ENV AWS_SECRET_ACCESS_KEY="AKIAFAKE-EXAMPLE"
 
-# Simulate a secret exposed in image
-ENV AWS_SECRET_ACCESS_KEY="AKIA-CRITICAL-EXAMPLE-1234"
+# Install packages that will show up in CVE databases
+RUN npm install -g express
 
-CMD ["/bin/bash"]
+CMD ["node"]
 
 # new comment hello
