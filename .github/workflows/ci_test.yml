@@ -32,28 +32,32 @@ jobs:
           echo "LW_API_SECRET=${{ secrets.LW_API_SECRET }}" >> env.list
 
       - name: Scan the repo for vulnerabilities in IaC
+        shell: bash
         run: |
           set -e
-          mkdir -p tmp-scan
+
+          # Prepare temporary scan directory
+          mkdir -p tmp-scan/workdir
           cp -r . tmp-scan/workdir
 
+          # Perform Lacework IaC scan with Docker
           docker run --rm \
-            -v "$(pwd)/tmp-scan/workdir:/app/src" \
+            -v "$PWD/tmp-scan/workdir:/app/src" \
             -w /app/src \
             lacework/codesec:latest \
-            bash -c 'lacework iac scan -d . --format json > /app/src/output.json' || true
+            bash -c 'lacework iac scan -d . --format json > /app/src/output.json'
 
           echo "Lacework IaC scan result:"
-          cat tmp-scan/workdir/output.json | jq .
+          jq . tmp-scan/workdir/output.json
 
+          # Check for critical findings
           CRIT_COUNT=$(jq '[.[] | select(.severity=="Critical")] | length' tmp-scan/workdir/output.json)
           if [ "$CRIT_COUNT" -gt 0 ]; then
-            echo "Found $CRIT_COUNT CRITICAL IaC finding(s)"
+            echo "❌ Found $CRIT_COUNT CRITICAL IaC finding(s)"
             exit 1
           else
-            echo "No CRITICAL findings in Lacework IaC scan"
+            echo "✅ No CRITICAL findings in Lacework IaC scan"
           fi
-        shell: bash
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v3
@@ -93,3 +97,7 @@ jobs:
       - name: Format scan results for PR comment
         if: github.event_name == 'pull_request'
         run: |
+          echo "# Lacework Inline Scanner Result" > pr-results.md
+          echo "<pre>" >> pr-results.md
+          echo "Scan completed. See the GitHub Summary above or view results in Lacework." >> pr-results.md
+          echo "</pre>" >> pr-results.md
