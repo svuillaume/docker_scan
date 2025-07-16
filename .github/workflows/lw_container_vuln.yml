@@ -50,16 +50,16 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          load: true
           file: ./Dockerfile.secure
+          load: true
           tags: ${{ env.IMAGE_NAME }}:secure-scan
 
       - name: Build Docker image (vuln-scan)
         uses: docker/build-push-action@v5
         with:
           context: .
-          load: true
           file: ./Dockerfile.vuln
+          load: true
           tags: ${{ env.IMAGE_NAME }}:vuln-scan
 
       - name: Scan image with Lacework inline scanner (secure scan)
