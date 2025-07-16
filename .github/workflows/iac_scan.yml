@@ -38,3 +38,17 @@ jobs:
             -v "$(pwd):/app/src" \
             lacework/codesec:stable \
             lacework iac scan --directory=/app/src --save-result report.json
+
+      - name: Convert JSON report to Markdown (optional)
+        if: always()
+        run: |
+          echo "# Lacework IaC Scan Report" > report.md
+          jq -r '.results[] | "- \(.message) [Severity: \(.severity)] in \(.file_path):\(.line_number)"' report.json >> report.md
+
+      - name: Upload Markdown Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lacework-iac-report-md
+          path: report.md
+
