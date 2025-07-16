@@ -9,7 +9,7 @@ resource "aws_s3_bucket" "public_bucket_demo" {
 
   tags = {
     Name        = "VulnerablePublicBucket"
-    Environment = "Test1000"
+    Environment = "Test"
   }
 }
 
