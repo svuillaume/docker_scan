@@ -1,7 +1,0 @@
-category: Compute
-checkTool: opal
-checkType: Terraform
-description: ""
-provider: AWS
-severity: Critical
-title: "region_demo"
