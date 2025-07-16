@@ -25,13 +25,13 @@ jobs:
           echo "LW_ACCOUNT=${{ secrets.LW_ACCOUNT }}" >> env.list
           echo "LW_API_KEY=${{ secrets.LW_API_KEY }}" >> env.list
           echo "LW_API_SECRET=${{ secrets.LW_API_SECRET }}" >> env.list
+          echo "EXIT_FLAG=CRITICAL=1" >> env.list
 
       - name: Prepare workspace
         run: chmod -R 777 "$(pwd)"
 
       - name: Run Lacework IaC Scan
         id: lacework_scan
-        continue-on-error: true
         run: |
           docker run \
             --env-file env.list \
@@ -39,16 +39,5 @@ jobs:
             lacework/codesec:stable \
             lacework iac scan --directory=/app/src --save-result report.json
 
-      - name: Convert JSON report to Markdown (optional)
-        if: always()
-        run: |
-          echo "# Lacework IaC Scan Report" > report.md
-          jq -r '.results[] | "- \(.message) [Severity: \(.severity)] in \(.file_path):\(.line_number)"' report.json >> report.md
-
-      - name: Upload Markdown Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: lacework-iac-report-md
-          path: report.md
+  
 
