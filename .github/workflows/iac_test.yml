@@ -1,0 +1,125 @@
+name: Build, Scan, and Push Docker Image to ECR
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Dockerfile*'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'Dockerfile*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  AWS_REGION: ca-central-1
+  IMAGE_NAME: 244822573207.dkr.ecr.ca-central-1.amazonaws.com/private/samv
+  VERSION: v1.0.0
+
+jobs:
+  build-scan-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract short SHA
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Build Docker image (secure)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.secure
+          load: true
+          tags: ${{ env.IMAGE_NAME }}:secure-scan
+
+      - name: Build Docker image (vuln)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.vuln
+          load: true
+          tags: ${{ env.IMAGE_NAME }}:vuln-scan
+
+      # Scan secure image and capture result manually
+      - name: Scan secure image with Lacework
+        id: scan_secure
+        continue-on-error: true
+        env:
+          LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME }}
+          LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN }}
+        run: |
+          lacework/lw-scanner image ${{ env.IMAGE_NAME }}:secure-scan \
+            --account $LW_ACCOUNT_NAME \
+            --access-token $LW_ACCESS_TOKEN \
+            --output json > secure-scan.json
+
+          echo "Results in summary:"
+          jq '.' secure-scan.json
+
+          if jq -e '.vulnerabilities[] | select(.severity == "Critical")' secure-scan.json >/dev/null; then
+            echo "exit_code=1" >> $GITHUB_OUTPUT
+          else
+            echo "exit_code=0" >> $GITHUB_OUTPUT
+          fi
+
+      # Scan vuln image — for reporting only
+      - name: Scan vuln image with Lacework
+        continue-on-error: true
+        uses: lacework/lw-scanner-action@v1.4.0
+        with:
+          LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME }}
+          LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN }}
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          IMAGE_TAG: vuln-scan
+          SAVE_RESULTS_IN_LACEWORK: true
+          RESULTS_IN_GITHUB_SUMMARY: true
+
+      # Optional PR comment
+      - name: Format scan results for PR comment
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "# Lacework Inline Scanner Result" > pr-results.md
+          echo "<pre>" >> pr-results.md
+          echo "Secure image scanned. View GitHub Summary or Lacework UI." >> pr-results.md
+          echo "</pre>" >> pr-results.md
+
+      - name: Comment PR with scan summary
+        if: github.event_name == 'pull_request'
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          filePath: pr-results.md
+
+      # Conditionally push secure image to ECR only if scan passed AND branch is main
+      - name: Build and Push Docker image to ECR (secure only)
+        if: ${{ steps.scan_secure.outputs.exit_code == '0' && github.ref == 'refs/heads/main' }}
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.secure
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:latest
+            ${{ env.IMAGE_NAME }}:${{ env.VERSION }}
+            ${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }}
