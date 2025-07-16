@@ -1,12 +1,26 @@
-package policies.tf_sample_custom_policy
+package policies.tf_sg_ssh_strict_ip
 
 input_type := "tf"
+resource_type := "aws_security_group"
 
-resource_type := "aws_s3_bucket"
+default deny = false
 
-default allow = false
+deny[msg] {
+  input.resource_type == resource_type
+  input_type == "tf"
+  some i
+  rule := input.ingress[i]
 
-# Add Rego Policy # 
-allow {
-input.logging[_].target_bucket = "example"
+  not ssh_from_trusted_ip(rule)
+
+  msg := sprintf("Security Group '%s' has non-compliant ingress rule: from_port=%d to_port=%d protocol=%s cidr_blocks=%v",
+    [input.name, rule.from_port, rule.to_port, rule.protocol, rule.cidr_blocks])
 }
+
+ssh_from_trusted_ip(rule) {
+  rule.from_port == 22
+  rule.to_port == 22
+  rule.protocol == "tcp"
+  rule.cidr_blocks == ["192.10.10.100/32"]
+}
+
