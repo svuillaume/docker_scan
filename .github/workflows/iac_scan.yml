@@ -53,7 +53,7 @@ jobs:
           ' iac-scan-results.json >> iac-scan-report.md
 
       - name: Upload IaC scan results as artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: lacework-iac-report
           path: |
