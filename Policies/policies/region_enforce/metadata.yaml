@@ -1,6 +1,0 @@
-id: region_enforce
-name: Enforce AWS Region ca-central-1
-platform: terraform
-category: compliance
-severity: high
-
