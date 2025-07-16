@@ -4,11 +4,11 @@ on:
   push:
     branches: [main]
     paths:
-      - 'Dockerfile'
+      - 'Dockerfile*'
   pull_request:
     branches: [main]
     paths:
-      - 'Dockerfile'
+      - 'Dockerfile*'
   workflow_dispatch:
 
 permissions:
