@@ -7,13 +7,17 @@ resource "aws_s3_bucket" "public_bucket_demo" {
   bucket = "extremely-insecure-public-bucket-demo"
   acl    = "public-read"
 
-  website {
-    index_document = "index.html"
-  }
-
   tags = {
     Name        = "VulnerablePublicBucket"
     Environment = "Test1000"
+  }
+}
+
+resource "aws_s3_bucket_website_configuration" "public_bucket_demo_website" {
+  bucket = aws_s3_bucket.public_bucket_demo.id
+
+  index_document {
+    suffix = "index.html"
   }
 }
 
@@ -41,16 +45,17 @@ resource "aws_s3_bucket" "unencrypted_bucket_demo" {
   }
 }
 
-# 3. Open security group
+# 3. SSH-only security group
 resource "aws_security_group" "open_sg_demo" {
-  name        = "allow_all_inbound"
-  description = "Allow everything inbound"
+  name        = "allow_ssh_only"
+  description = "Allow SSH inbound only"
   vpc_id      = "vpc-02bb3bfffb72e11c1"
 
   ingress {
-    from_port   = 0
-    to_port     = 65535
-    protocol    = "-1"
+    description = "SSH access"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
