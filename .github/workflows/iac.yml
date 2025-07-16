@@ -29,6 +29,9 @@ jobs:
 
       - name: Scan the repo for vulnerabilities in IaC
         run: |
-          - name: Scan the repo for vulnerabilities in IaC
-        run: |
-          docker run --env-file env.list -v "$(pwd):/app/src" -v "$(pwd)/Policies:/app/Policies" lacework/codesec:stable lacework iac scan --directory=. --custom-policy-dir=/app/Policies 
+          docker run \
+            --env-file env.list \
+            -v "$(pwd):/app/src" \
+            -v "$(pwd)/Policies:/app/Policies" \
+            lacework/codesec:stable \
+            lacework iac scan --directory=. --custom-policy-dir=/app/Policies
