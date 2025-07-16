@@ -1,12 +1,27 @@
-# ⚠️ INTENTIONALLY INSECURE FOR SCANNER TESTING ONLY
-FROM node:10.0.0
+# Use a minimal base image
+FROM python:3.11-alpine
 
-# Optional: add secrets and unsafe practices
-ENV AWS_SECRET_ACCESS_KEY="AKIAFAKE-EXAMPLE"
+# Set non-root user
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-# Install packages that will show up in CVE databases
-RUN npm install -g express
+# Set working directory
+WORKDIR /app
 
-CMD ["node"]
+# Install dependencies securely
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# new comment hello
+# Copy application code
+COPY . .
+
+# Change ownership to non-root user
+RUN chown -R appuser:appgroup /app
+
+# Drop to non-root user
+USER appuser
+
+# Expose the application port
+EXPOSE 5000
+
+# Run the app
+CMD ["python", "app.py"]
