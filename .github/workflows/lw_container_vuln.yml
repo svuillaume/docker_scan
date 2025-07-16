@@ -1,4 +1,4 @@
-name: Build, Scan, and Push Docker Image to ECR
+name: Single Dockerfile - Build, Scan, and Push Docker Image to ECR
 
 on:
   push:
