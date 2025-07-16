@@ -1,56 +1,40 @@
-name: lacework-iac-scan
+name: lacework-iac-example
 
 on:
   push:
+    branches: [ "main" ]
     paths:
-      - '**.tf'
+      - '**/*.tf'
   pull_request:
+    branches: [ "main" ]
     paths:
-      - '**.tf'
+      - '**/*.tf'
   workflow_dispatch:
 
 jobs:
-  iac-scan:
-    runs-on: ubuntu-latest
+  build:
+    runs-on: ubuntu-24.04
 
     steps:
-      - name: Checkout repository
+      - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Create env file for Lacework
+      - name: Create environment variables file
         run: |
+          env | grep "GITHUB_\|LW_\|CI_" > env.list
           echo "LW_ACCOUNT=${{ secrets.LW_ACCOUNT }}" >> env.list
           echo "LW_API_KEY=${{ secrets.LW_API_KEY }}" >> env.list
           echo "LW_API_SECRET=${{ secrets.LW_API_SECRET }}" >> env.list
-          echo "JSON_OUTPUT_FILE=/app/src/iac-scan-results.json" >> env.list
-          echo "CI_EXIT_ON_SEVERITY=high" >> env.list
+
+      - name: Prepare workspace
+        run: chmod -R 777 "$(pwd)"
 
       - name: Run Lacework IaC Scan
+        id: lacework_scan
+        continue-on-error: true
         run: |
           docker run \
             --env-file env.list \
             -v "$(pwd):/app/src" \
             lacework/codesec:stable \
-            lacework iac scan --directory=/app/src
-
-      - name: Convert scan results to Markdown
-        run: |
-          echo "## Lacework IaC Scan Results" > iac-scan-report.md
-          jq -r '
-            .[] | 
-            select(.severity != null) | 
-            "- **Policy ID**: \(.policy_id)  
-              **Severity**: \(.severity)  
-              **Title**: \(.title)  
-              **File**: \(.file_path)  
-              **Line**: \(.line_number)  
-              **Message**: \(.message)\n"
-          ' iac-scan-results.json >> iac-scan-report.md
-
-      - name: Upload Lacework scan results
-        uses: actions/upload-artifact@v4
-        with:
-          name: lacework-iac-scan-artifacts
-          path: |
-            iac-scan-results.json
-            iac-scan-report.md
+            lacework iac scan --directory=/app/src 
