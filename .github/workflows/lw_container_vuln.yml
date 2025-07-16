@@ -46,20 +46,39 @@ jobs:
         id: vars
         run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
-      - name: Build Docker image (scan-temp)
+      - name: Build Docker image (sec-temp)
         uses: docker/build-push-action@v5
         with:
           context: .
           load: true
-          tags: ${{ env.IMAGE_NAME }}:scan-temp
+          file: ./Dockerfile.secure
+          tags: ${{ env.IMAGE_NAME }}:secure-scan
 
-      - name: Scan image with Lacework inline scanner
+      - name: Build Docker image (vuln-scan)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          load: true
+          file: ./Dockerfile.vuln
+          tags: ${{ env.IMAGE_NAME }}:vuln-scan
+
+      - name: Scan image with Lacework inline scanner (secure scan)
         uses: lacework/lw-scanner-action@v1.4.0
         with:
           LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME }}
           LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN }}
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
-          IMAGE_TAG: scan-temp
+          IMAGE_TAG: secure-scan
+          SAVE_RESULTS_IN_LACEWORK: true
+          RESULTS_IN_GITHUB_SUMMARY: true
+
+      - name: Scan image with Lacework inline scanner (vuln scan)
+        uses: lacework/lw-scanner-action@v1.4.0
+        with:
+          LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME }}
+          LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN }}
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          IMAGE_TAG: vuln-scan
           SAVE_RESULTS_IN_LACEWORK: true
           RESULTS_IN_GITHUB_SUMMARY: true
 
