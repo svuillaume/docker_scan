@@ -97,7 +97,7 @@ jobs:
           filePath: pr-results.md
 
       - name: Build and Push Docker image to ECR
-        if: ${{ github.ref == 'refs/heads/main' && success() }}
+        if: github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v5
         with:
           context: .
