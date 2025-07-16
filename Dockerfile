@@ -1,7 +1,9 @@
-FROM debian:stretch-slim
+FROM node:10.0.0
 
-COPY vulnerable /vulnerable
-COPY entrypoint /entrypoint
-RUN chmod +x /vulnerable /entrypoint
+# Optional: add secrets and unsafe practices
+ENV AWS_SECRET_ACCESS_KEY="AKIAFAKE-EXAMPLE"
 
-CMD ["/entrypoint"]
+# Install packages that will show up in CVE databases
+RUN npm install -g express
+
+CMD ["node"]
