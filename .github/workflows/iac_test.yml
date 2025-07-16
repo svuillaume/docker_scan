@@ -50,17 +50,17 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile.secure
+          file: ./Dockerfile.prod
           load: true
-          tags: ${{ env.IMAGE_NAME }}:secure-scan
+          tags: ${{ env.IMAGE_NAME }}:secure
 
       - name: Build Docker image (vuln)
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile.vuln
+          file: ./Dockerfile.qa
           load: true
-          tags: ${{ env.IMAGE_NAME }}:vuln-scan
+          tags: ${{ env.IMAGE_NAME }}:vuln
 
       # Scan secure image and capture result manually
       - name: Scan secure image with Lacework
@@ -70,7 +70,7 @@ jobs:
           LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME }}
           LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN }}
         run: |
-          lacework/lw-scanner image ${{ env.IMAGE_NAME }}:secure-scan \
+          lacework/lw-scanner image ${{ env.IMAGE_NAME }}:secure \
             --account $LW_ACCOUNT_NAME \
             --access-token $LW_ACCESS_TOKEN \
             --output json > secure-scan.json
@@ -92,7 +92,7 @@ jobs:
           LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME }}
           LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN }}
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
-          IMAGE_TAG: vuln-scan
+          IMAGE_TAG: vuln
           SAVE_RESULTS_IN_LACEWORK: true
           RESULTS_IN_GITHUB_SUMMARY: true
 
@@ -117,7 +117,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile.secure
+          file: ./Dockerfile.prod
           push: true
           tags: |
             ${{ env.IMAGE_NAME }}:latest
