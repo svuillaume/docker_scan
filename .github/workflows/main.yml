@@ -52,8 +52,5 @@ jobs:
             cat results.stdout >> pr-results.md
             echo "</pre>" >> pr-results.md
 
-      - name: Comment PR
-        uses: thollander/actions-comment-pull-request@v2
-        with:
-          filePath: pr-results.md
+    
 
