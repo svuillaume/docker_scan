@@ -1,4 +1,4 @@
-name: Multiple Dockerfile Build, Scan, and Push Docker Image to ECR
+name: Secure vs Vuln Dockerfile - Build, Scan, and Push Docker Image to ECR
 
 on:
   push:
