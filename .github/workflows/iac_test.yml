@@ -62,17 +62,19 @@ jobs:
           load: true
           tags: ${{ env.IMAGE_NAME }}:vuln
 
-      # Scan secure image and capture result manually
       - name: Scan secure image with Lacework
         id: scan_secure
         continue-on-error: true
         env:
           LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME }}
           LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN }}
+          IMAGE_NAME: 244822573207.dkr.ecr.ca-central-1.amazonaws.com/private/samv
         run: |
-          lacework/lw-scanner image ${{ env.IMAGE_NAME }}:secure \
-            --account $LW_ACCOUNT_NAME \
-            --access-token $LW_ACCESS_TOKEN \
+          docker run --rm \
+            -e LW_ACCOUNT_NAME=$LW_ACCOUNT_NAME \
+            -e LW_ACCESS_TOKEN=$LW_ACCESS_TOKEN \
+            lacework/lw-scanner \
+            image $IMAGE_NAME:secure \
             --output json > secure-scan.json
 
           echo "Results in summary:"
@@ -84,7 +86,6 @@ jobs:
             echo "exit_code=0" >> $GITHUB_OUTPUT
           fi
 
-      # Scan vuln image — for reporting only
       - name: Scan vuln image with Lacework
         continue-on-error: true
         uses: lacework/lw-scanner-action@v1.4.0
@@ -96,7 +97,6 @@ jobs:
           SAVE_RESULTS_IN_LACEWORK: true
           RESULTS_IN_GITHUB_SUMMARY: true
 
-      # Optional PR comment
       - name: Format scan results for PR comment
         if: github.event_name == 'pull_request'
         run: |
@@ -110,8 +110,8 @@ jobs:
         uses: thollander/actions-comment-pull-request@v2
         with:
           filePath: pr-results.md
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Conditionally push secure image to ECR only if scan passed AND branch is main
       - name: Build and Push Docker image to ECR (secure only)
         if: ${{ steps.scan_secure.outputs.exit_code == '0' && github.ref == 'refs/heads/main' }}
         uses: docker/build-push-action@v5
