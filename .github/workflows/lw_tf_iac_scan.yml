@@ -1,4 +1,4 @@
-name: lacework-iac-example
+name: IaC - TF Scan -  Cloud Provisioning Misconfigurations
 
 on:
   push:
