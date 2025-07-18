@@ -1,4 +1,4 @@
-name: Lacework ECR Image Scan (lw-scanner-action)
+name: Conatainer Registry Image Scan 
 
 on:
   workflow_dispatch:
