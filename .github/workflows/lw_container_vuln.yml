@@ -1,4 +1,4 @@
-name: Container - Build, Scan, and Push Docker Image to ECR
+name: Container Build - Scan and Push to Container Registry
 
 on:
   push:
