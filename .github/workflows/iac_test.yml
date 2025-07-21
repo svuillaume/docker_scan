@@ -1,4 +1,5 @@
-name: Secure vs Vuln Dockerfile - Build, Scan, and Push Docker Image to ECR
+name: CodeSec - Multi Container Vulnerability Scanning at Built
+
 
 on:
   push:
