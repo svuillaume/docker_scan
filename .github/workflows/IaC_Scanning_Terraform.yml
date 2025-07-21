@@ -43,12 +43,12 @@ jobs:
 
       - name: Fail on CRITICAL or HIGH non-compliance
         run: |
-          if [ ! -f report.json ]; then
+          if [ ! -f /app/src/report.json ]; then
             echo "report.json not found! Assuming scan failed or no results. Failing the build."
             exit 1
           fi
 
-          if jq -e '.findings | any(.severity=="CRITICAL" or .severity=="HIGH")' report.json; then
+          if jq -e '.findings | any(.severity=="CRITICAL" or .severity=="HIGH")' /app/src/report.json; then
             echo "Critical or High severity issues found. Failing the build."
             exit 1
           else
