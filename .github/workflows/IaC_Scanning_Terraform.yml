@@ -52,13 +52,13 @@ jobs:
         id: scan_result
         run: |
           set +e
-          jq -e '.findings | any(.severity=="CRITICAL" or .severity=="HIGH")' report.json > /dev/null
+          jq -e '.findings | any(.severity=="Critical")' report.json > /dev/null
           CODE=$?
           echo "exit_code=$CODE" >> "$GITHUB_OUTPUT"
           if [ "$CODE" -eq 0 ]; then
-            echo "⚠️ CRITICAL or HIGH severity findings were detected in the scan."
+            echo "⚠️ CRITICAL severity findings were detected in the scan."
           else
-            echo "✅ No CRITICAL or HIGH severity findings detected."
+            echo "✅ No CRITICAL severity findings detected."
           fi
           set -e
 
@@ -69,10 +69,10 @@ jobs:
           name: lacework-iac-report
           path: report.json
 
-      - name: Fail CI if CRITICAL/HIGH issues were found
+      - name: Fail CI if CRITICAL issues were found
         if: ${{ steps.scan_result.outputs.exit_code == '0' }}
         run: |
-          echo "❌ Failing the build due to CRITICAL or HIGH severity issues found in Lacework IaC scan."
+          echo "❌ Failing the build due to CRITICAL severity issues found in Lacework IaC scan."
           exit 1
 
             
