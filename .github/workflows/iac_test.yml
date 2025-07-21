@@ -63,7 +63,7 @@ jobs:
           tags: ${{ env.IMAGE_NAME }}:vuln
 
     
-      - name: Scan vuln image with Lacework
+      - name: Scan vuln image with Lacework prod
         continue-on-error: true
         uses: lacework/lw-scanner-action@v1.4.0
         with:
@@ -74,7 +74,7 @@ jobs:
           SAVE_RESULTS_IN_LACEWORK: true
           RESULTS_IN_GITHUB_SUMMARY: true
 
-      - name: Scan vuln image with Lacework
+      - name: Scan vuln image with Lacework qa
         continue-on-error: true
         uses: lacework/lw-scanner-action@v1.4.0
         with:
