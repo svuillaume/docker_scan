@@ -1,13 +1,10 @@
-FROM alpine:3.20.1
+FROM ubuntu:24.04
 
-# Create a user and group
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+# Do not run as root in production images
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/*
 
-# Install only curl, no cache, minimal packages
-RUN apk --no-cache add curl
-
-USER appuser
-
-CMD ["echo", "Hello World"]
+CMD ["bash", "-c", "echo Hello World && curl --version"]
 
 
