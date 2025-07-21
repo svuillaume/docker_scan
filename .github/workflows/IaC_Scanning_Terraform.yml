@@ -41,19 +41,11 @@ jobs:
             lacework/codesec:stable \
             lacework iac scan --directory=/app/src --save-result /app/src/report.json
 
-      - name: Fail on CRITICAL or HIGH non-compliance
+      - name: Detect critical/high issues but don't fail yet
+        id: scan_result
         run: |
-          if [ ! -f report.json ]; then
-            echo "report.json not found! Assuming scan failed or no results. Failing the build."
-            exit 1
-          fi
-
-          if jq -e '.findings | any(.severity=="Critical" or .severity=="High")' report.json; then
-            echo "Critical or High severity issues found. Failing the build."
-            exit 1
-          else
-            echo "No critical or high severity issues found."
-          fi
+          jq -e '.findings | any(.severity=="CRITICAL" or .severity=="HIGH")' report.json > /dev/null
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
 
       - name: Upload report.json as artifact
         if: ${{ always() }}
@@ -61,6 +53,12 @@ jobs:
         with:
           name: lacework-iac-report
           path: report.json
+
+      - name: Fail job if issues found
+        if: ${{ steps.scan_result.outputs.exit_code == '0' }}
+        run: |
+          echo "❌ Critical or High severity issues found"
+          exit 1
 
             
 
