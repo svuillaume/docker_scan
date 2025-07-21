@@ -39,5 +39,16 @@ jobs:
             lacework/codesec:stable \
             lacework iac scan --directory=/app/src --save-result report.json
 
+      - name: Fail on CRITICAL or HIGH non-compliance
+        run: |
+          if jq -e '.findings | any(.severity=="CRITICAL" or .severity=="HIGH")' report.json; then
+            echo "Critical or High severity issues found. Failing the build."
+            exit 1
+          else
+            echo "No critical or high severity issues found."
+          fi
+
+            
+
   
 
