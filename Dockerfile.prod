@@ -1,6 +1,13 @@
-FROM alpine:3.20
-RUN apk add --no-cache curl
-RUN echo "Hello World"
+FROM alpine:3.20.1
 
+# Create a user and group
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# Install only curl, no cache, minimal packages
+RUN apk --no-cache add curl
+
+USER appuser
+
+CMD ["echo", "Hello World"]
 
 
