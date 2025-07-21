@@ -48,7 +48,7 @@ jobs:
             exit 1
           fi
 
-          if jq -e '.findings | any(.severity=="CRITICAL" or .severity=="HIGH")' report.json; then
+          if jq -e '.findings | any(.severity=="Critical" or .severity=="High")' report.json; then
             echo "Critical or High severity issues found. Failing the build."
             exit 1
           else
