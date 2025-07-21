@@ -62,29 +62,17 @@ jobs:
           load: true
           tags: ${{ env.IMAGE_NAME }}:vuln
 
-      - name: Scan secure image with Lacework
-        id: scan_secure
+    
+      - name: Scan vuln image with Lacework
         continue-on-error: true
-        env:
+        uses: lacework/lw-scanner-action@v1.4.0
+        with:
           LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME }}
           LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN }}
-          IMAGE_NAME: 244822573207.dkr.ecr.ca-central-1.amazonaws.com/private/samv
-        run: |
-          docker run --rm \
-            -e LW_ACCOUNT_NAME=$LW_ACCOUNT_NAME \
-            -e LW_ACCESS_TOKEN=$LW_ACCESS_TOKEN \
-            lacework/lw-scanner \
-            image $IMAGE_NAME:secure \
-            --output json > secure-scan.json
-
-          echo "Results in summary:"
-          jq '.' secure-scan.json
-
-          if jq -e '.vulnerabilities[] | select(.severity == "Critical")' secure-scan.json >/dev/null; then
-            echo "exit_code=1" >> $GITHUB_OUTPUT
-          else
-            echo "exit_code=0" >> $GITHUB_OUTPUT
-          fi
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          IMAGE_TAG: secure
+          SAVE_RESULTS_IN_LACEWORK: true
+          RESULTS_IN_GITHUB_SUMMARY: true
 
       - name: Scan vuln image with Lacework
         continue-on-error: true
