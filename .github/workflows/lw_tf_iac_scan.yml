@@ -1,4 +1,4 @@
-name: IaC - TF Scan -  Cloud Provisioning Misconfigurations
+name: CodeSec IaC Scanning Terraform
 
 on:
   push:
