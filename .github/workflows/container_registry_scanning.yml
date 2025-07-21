@@ -1,0 +1,53 @@
+name: Container Registry Vulnerability Scan
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+
+env:
+  AWS_REGION: ca-central-1
+  IMAGE_NAME: 244822573207.dkr.ecr.ca-central-1.amazonaws.com/private/samv
+  IMAGE_TAG: samv_dvwa
+
+jobs:
+  scan-ecr-image:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        run: |
+          aws ecr get-login-password --region $AWS_REGION | \
+            docker login --username AWS --password-stdin 244822573207.dkr.ecr.ca-central-1.amazonaws.com
+
+      - name: Pull Docker image from ECR
+        run: |
+          docker pull $IMAGE_NAME:$IMAGE_TAG
+
+      - name: Scan container images for vulnerabilities using Lacework
+        uses: lacework/lw-scanner-action@v1.4.0
+        with:
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          IMAGE_TAG: ${{ env.IMAGE_TAG }}
+          LW_ACCOUNT_NAME: ${{ secrets.LW_ACCOUNT_NAME }}
+          LW_ACCESS_TOKEN: ${{ secrets.LW_ACCESS_TOKEN }}
+          SAVE_RESULTS_IN_LACEWORK: true
+          RESULTS_IN_GITHUB_SUMMARY: true
+
+      - name: Change formatting for PR
+        run: |
+            echo "# Lacework Inline Scanner Result" > pr-results.md
+            echo "<pre>" >> pr-results.md
+            cat results.stdout >> pr-results.md
+            echo "</pre>" >> pr-results.md
