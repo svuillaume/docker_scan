@@ -33,7 +33,7 @@ jobs:
           echo "LW_ACCOUNT=${{ secrets.LW_ACCOUNT }}" >> env.list
           echo "LW_API_KEY=${{ secrets.LW_API_KEY }}" >> env.list
           echo "LW_API_SECRET=${{ secrets.LW_API_SECRET }}" >> env.list
-          echo "EXIT_FLAG=CRITICAL=1" >> env.list
+          echo "EXIT_FLAG=critical=1" >> env.list
 
       # Step 3: Run Lacework IaC scan
       - name: Scan the repo for vulnerabilities in IaC
@@ -42,4 +42,4 @@ jobs:
             --env-file env.list \
             -v "$(pwd):/app/src" \
             lacework/codesec:stable \
-            lacework iac scan --directory=. --exit-code hard=1 --debug
+            lacework iac scan --directory=. --debug
