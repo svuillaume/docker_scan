@@ -42,4 +42,4 @@ jobs:
             --env-file env.list \
             -v "$(pwd):/app/src" \
             lacework/codesec:stable \
-            lacework iac scan --directory=. --debug
+            lacework iac scan --directory=. --exit-code hard=1 --debug
