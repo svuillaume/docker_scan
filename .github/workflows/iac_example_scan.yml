@@ -34,6 +34,7 @@ jobs:
           echo "LW_API_KEY=${{ secrets.LW_API_KEY }}" >> env.list
           echo "LW_API_SECRET=${{ secrets.LW_API_SECRET }}" >> env.list
           echo "EXIT_FLAG=critical=1" >> env.list
+          echo "LW_EXIT_SEVERITY_THRESHOLD=critical" >> env.list
 
       # Step 3: Run Lacework IaC scan
       - name: Scan the repo for vulnerabilities in IaC
