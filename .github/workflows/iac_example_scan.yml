@@ -5,8 +5,12 @@ on:
   # Triggers the workflow on push or pull request events to the "main" branch
   push:
     branches: [ "main" ]
+     paths:
+      - 'main.tf'
   pull_request:
     branches: [ "main" ]
+     paths:
+      - 'main.tf'
 
   # Allows manual trigger from the Actions tab
   workflow_dispatch:
